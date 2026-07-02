@@ -1,0 +1,1416 @@
+// ── Tokyo Night palette ─────────────────────────────────────
+$bg: rgba(17, 17, 27, 0.92);
+$bg-light: rgba(30, 30, 46, 0.95);
+$fg: #c0caf5;
+$accent: #7aa2f7;
+$accent-dim: rgba(122, 162, 247, 0.15);
+$accent-hover: rgba(122, 162, 247, 0.25);
+$fg-dim: rgba(192, 202, 245, 0.4);
+$fg-mid: rgba(192, 202, 245, 0.75);
+$red: #f7768e;
+$green: #9ece6a;
+$yellow: #e0af68;
+$cyan: #2ac3de;
+$purple: #bb9af7;
+$muted: #565f89;
+$border: rgba(255, 255, 255, 0.07);
+$border-light: rgba(255, 255, 255, 0.12);
+$shadow: rgba(0, 0, 0, 0.5);
+$dark: rgba(17, 17, 27, 0.95);
+
+// ── Reset ───────────────────────────────────────────────────
+* {
+    all: unset;
+    font-family: "JetBrainsMono Nerd Font", Roboto, Arial, sans-serif;
+    font-size: 14px;
+}
+
+// ═══════════════════════════════════════════════════════════
+// BAR — 3 Separate Pills
+// ═══════════════════════════════════════════════════════════
+window.Bar {
+    background: transparent;
+    color: $fg;
+}
+
+.bar-container {
+    background: transparent;
+    padding: 0;
+}
+
+.pill {
+    background: #000000;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    padding: 4px 10px 8px;
+    margin: 0;
+}
+
+.pill-left {
+    padding: 4px 10px 8px 20px;
+}
+
+.pill-center {
+    padding: 4px 16px 8px;
+}
+
+.pill-right {
+    padding: 4px 20px 8px 10px;
+}
+
+// ── Concave curves (Bezier angle ends) ───────────────────
+.angle {
+    background: #000000;
+}
+
+// ── Launcher ───────────────────────────────────────────────
+.launcher {
+    color: $accent;
+    font-size: 18px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+    }
+}
+
+// ── Workspace dots ─────────────────────────────────────────
+.workspaces {
+    padding: 0 4px;
+}
+
+.ws-dot {
+    padding: 2px;
+    margin: 0 2px;
+    border-radius: 50%;
+    transition: 180ms ease;
+
+    .dot-inner {
+        min-width: 10px;
+        min-height: 10px;
+        border-radius: 50%;
+        background: rgba(192, 202, 245, 0.2);
+        transition: 180ms ease;
+    }
+
+    &:hover .dot-inner {
+        background: rgba(122, 162, 247, 0.5);
+    }
+
+    &.active .dot-inner {
+        min-width: 24px;
+        border-radius: 5px;
+        background: $fg;
+    }
+
+    &.occupied .dot-inner {
+        background: rgba(122, 162, 247, 0.55);
+    }
+}
+
+// ── Media indicator ────────────────────────────────────────
+.media-indicator {
+    color: $purple;
+    font-size: 15px;
+    padding: 2px 6px;
+    margin-left: 4px;
+    border-radius: 10px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+    }
+}
+
+// ── Active window (center pill) ────────────────────────────
+.active-window {
+    color: $fg;
+    font-size: 13px;
+    padding: 2px 4px;
+    border-radius: 10px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+    }
+
+    label {
+        color: $fg;
+    }
+}
+
+// ── Bar items (shared) ─────────────────────────────────────
+.clock,
+.volume,
+.battery,
+.bt-indicator,
+.net-indicator,
+.notif-indicator {
+    padding: 2px 8px;
+    margin: 0 1px;
+    color: $fg;
+    font-size: 16px;
+    border-radius: 10px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+    }
+}
+
+.clock {
+    font-size: 14px;
+    font-weight: bold;
+    color: $fg;
+}
+
+.battery {
+    color: $green;
+}
+
+.bt-indicator {
+    &.disabled { color: $muted; }
+    &.connected { color: $cyan; }
+}
+
+.net-indicator {
+    &.disconnected { color: $red; }
+}
+
+.notif-indicator {
+    color: $yellow;
+}
+
+// ═══════════════════════════════════════════════════════════
+// FRAME — Screen border overlay
+// ═══════════════════════════════════════════════════════════
+window.Frame {
+    background: transparent;
+}
+
+.frame-edge-v {
+    min-width: 10px;
+    background: #000000;
+}
+
+.frame-edge-h {
+    min-height: 10px;
+    background: #000000;
+}
+
+.corner {
+    min-width: 24px;
+    min-height: 24px;
+    background: transparent;
+}
+
+.corner-tl {
+    border-top: 10px solid #000000;
+    border-left: 10px solid #000000;
+    border-top-left-radius: 24px;
+}
+
+.corner-tr {
+    border-top: 10px solid #000000;
+    border-right: 10px solid #000000;
+    border-top-right-radius: 24px;
+}
+
+.corner-bl {
+    border-bottom: 10px solid #000000;
+    border-left: 10px solid #000000;
+    border-bottom-left-radius: 24px;
+}
+
+.corner-br {
+    border-bottom: 10px solid #000000;
+    border-right: 10px solid #000000;
+    border-bottom-right-radius: 24px;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CALENDAR POPUP
+// ═══════════════════════════════════════════════════════════
+window.CalendarPopup {
+    background: transparent;
+}
+
+.calendar-container {
+    background: $bg-light;
+    border-radius: 16px;
+    border: 1px solid $border;
+    box-shadow: 0 8px 32px $shadow;
+    padding: 16px;
+    min-width: 300px;
+}
+
+.calendar-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: $accent;
+    margin-bottom: 8px;
+}
+
+.calendar-wrap {
+    calendar {
+        color: $fg;
+        padding: 4px;
+
+        &:selected {
+            background: $accent;
+            color: $dark;
+            border-radius: 8px;
+        }
+
+        &:indeterminate {
+            color: $muted;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MEDIA POPUP
+// ═══════════════════════════════════════════════════════════
+window.MediaPopup {
+    background: transparent;
+}
+
+.media-popup-content {
+    background: #000000;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+    padding: 0;
+    min-width: 380px;
+}
+
+// ── Empty state ────────────────────────────────────────────
+.media-empty {
+    padding: 40px 20px;
+
+    .media-empty-icon {
+        font-size: 42px;
+        color: rgba(255, 255, 255, 0.1);
+        margin-bottom: 8px;
+    }
+
+    .media-empty-text {
+        font-size: 13px;
+        color: $muted;
+    }
+}
+
+// ── Card ───────────────────────────────────────────────────
+.media-card {
+    border-radius: 20px;
+    min-width: 380px;
+}
+
+.media-backdrop {
+    min-height: 120px;
+    border-radius: 20px 20px 0 0;
+    background: rgba($accent, 0.08);
+    margin-bottom: -120px;
+}
+
+.media-overlay {
+    padding: 16px 20px 14px;
+}
+
+// ── Source (player name) ───────────────────────────────────
+.media-source {
+    margin-bottom: 14px;
+    padding: 0 2px;
+
+    .media-source-icon {
+        font-size: 13px;
+        color: $accent;
+        margin-right: 6px;
+    }
+
+    .media-source-name {
+        font-size: 10px;
+        font-weight: bold;
+        color: $muted;
+    }
+}
+
+// ── Art + Text ─────────────────────────────────────────────
+.media-main {
+    margin-bottom: 16px;
+}
+
+.media-art {
+    min-width: 96px;
+    min-height: 96px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    margin-right: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.media-info {
+    padding: 4px 0;
+}
+
+.media-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: $fg;
+    margin-bottom: 4px;
+}
+
+.media-artist {
+    font-size: 13px;
+    color: $fg-mid;
+    margin-bottom: 2px;
+}
+
+.media-album {
+    font-size: 11px;
+    color: $muted;
+    margin-top: 2px;
+}
+
+// ── Progress ───────────────────────────────────────────────
+.media-progress {
+    padding: 0 2px;
+    margin-bottom: 4px;
+}
+
+.media-progress-bar {
+    trough {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+        min-height: 5px;
+
+        highlight {
+            background: $accent;
+            border-radius: 3px;
+            min-height: 5px;
+        }
+    }
+
+    slider {
+        background: $fg;
+        border-radius: 50%;
+        min-width: 12px;
+        min-height: 12px;
+        margin: -4px 0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+}
+
+.media-time {
+    padding: 4px 2px 0;
+
+    .media-time-label {
+        font-size: 10px;
+        color: $muted;
+}
+}
+
+// ── Controls ───────────────────────────────────────────────
+.media-controls {
+    padding: 6px 0 4px;
+}
+
+.media-ctrl-btn {
+    padding: 8px 14px;
+    color: $fg;
+    border-radius: 12px;
+    font-size: 20px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+.media-ctrl-secondary {
+    color: $muted;
+    font-size: 16px;
+
+    &:hover {
+        color: $fg-mid;
+    }
+}
+
+.media-ctrl-active {
+    color: $accent;
+    font-size: 16px;
+}
+
+.media-play-btn {
+    font-size: 32px;
+    color: $accent;
+    padding: 8px 18px;
+    margin: 0 4px;
+    background: rgba($accent, 0.08);
+    border-radius: 50%;
+
+    &:hover {
+        background: rgba($accent, 0.16);
+    }
+}
+
+// ── Multi-player dots ──────────────────────────────────────
+.media-player-dots {
+    padding: 6px 0 12px;
+}
+
+.media-dot {
+    padding: 3px;
+    margin: 0 3px;
+    border-radius: 50%;
+
+    .media-dot-inner {
+        min-width: 6px;
+        min-height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        transition: 200ms ease;
+    }
+
+    &:hover .media-dot-inner {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    &.active .media-dot-inner {
+        min-width: 18px;
+        border-radius: 4px;
+        background: $accent;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIDEBAR (Quick Settings) — black pill theme
+// ═══════════════════════════════════════════════════════════
+window.QuickSettings {
+    background: transparent;
+}
+
+.sidebar {
+    background: #000000;
+    min-width: 380px;
+    padding: 16px 14px;
+    border-radius: 0 0 0 20px;
+    border: none;
+    box-shadow: none;
+}
+
+// ── Header ──────────────────────────────────────────────────
+.sidebar-header {
+    padding: 0 4px 10px 4px;
+}
+
+.sidebar-date {
+    font-size: 13px;
+    color: $muted;
+}
+
+.sidebar-time {
+    font-size: 28px;
+    font-weight: bold;
+    color: $fg;
+}
+
+// ── Tab bar ─────────────────────────────────────────────────
+.sidebar-tabs {
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    margin: 0 0 6px;
+}
+
+.sidebar-tab {
+    padding: 6px 4px;
+    border-radius: 10px;
+    transition: 200ms ease;
+    color: $muted;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: $fg-mid;
+    }
+
+    &.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+}
+
+.sidebar-tab-icon {
+    font-size: 16px;
+}
+
+.sidebar-tab-label {
+    font-size: 9px;
+    margin-top: 2px;
+}
+
+// ── Mini toggles (DnD, BT power) ───────────────────────────
+.sidebar-mini-toggle {
+    font-size: 16px;
+    color: $muted;
+    padding: 4px 8px;
+    margin: 0 4px;
+    border-radius: 8px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: $fg-mid;
+    }
+
+    &.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+}
+
+// ── Sections ────────────────────────────────────────────────
+.sidebar-section {
+    padding: 6px 4px;
+}
+
+.sidebar-section-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: $muted;
+    margin-bottom: 6px;
+}
+
+.sidebar-section-header {
+    margin-bottom: 6px;
+}
+
+.sidebar-subsection-title {
+    font-size: 10px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.25);
+    margin: 8px 0 4px 4px;
+}
+
+// ── Action buttons (Buscar, etc) ────────────────────────────
+.sidebar-action-btn {
+    font-size: 11px;
+    color: $fg-mid;
+    padding: 3px 10px;
+    margin: 0 4px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+}
+
+// ── Sliders ─────────────────────────────────────────────────
+.sidebar-slider-row {
+    padding: 4px 0;
+}
+
+.sidebar-slider-icon {
+    font-size: 16px;
+    color: $fg-mid;
+    min-width: 28px;
+    margin-right: 6px;
+    border-radius: 8px;
+    padding: 2px 4px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+.sidebar-slider {
+    margin: 0 6px;
+
+    trough {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        min-height: 6px;
+
+        highlight {
+            background: $fg-mid;
+            border-radius: 4px;
+            min-height: 6px;
+        }
+    }
+
+    slider {
+        background: $fg;
+        border-radius: 50%;
+        min-width: 14px;
+        min-height: 14px;
+        margin: -4px 0;
+    }
+}
+
+.sidebar-slider-value {
+    font-size: 11px;
+    color: $muted;
+    min-width: 36px;
+}
+
+// ── Info rows ───────────────────────────────────────────────
+.sidebar-info-row {
+    padding: 5px 4px;
+}
+
+.sidebar-info-icon {
+    font-size: 14px;
+    color: $muted;
+    min-width: 24px;
+    margin-right: 8px;
+}
+
+.sidebar-info-label {
+    font-size: 12px;
+    color: $muted;
+}
+
+.sidebar-info-value {
+    font-size: 12px;
+    color: $fg-mid;
+}
+
+// ── List items (wifi, bt, audio devices) ────────────────────
+.sidebar-list-item {
+    padding: 7px 10px;
+    margin: 1px 0;
+    border-radius: 8px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    &.active {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+.sidebar-list-icon {
+    font-size: 14px;
+    color: $fg-mid;
+    min-width: 22px;
+    margin-right: 8px;
+}
+
+.sidebar-list-name {
+    font-size: 12px;
+    color: $fg;
+}
+
+.sidebar-list-status {
+    font-size: 10px;
+    color: $green;
+    margin-right: 6px;
+}
+
+.sidebar-list-meta {
+    font-size: 10px;
+    color: $muted;
+    min-width: 28px;
+}
+
+// ── Separator ───────────────────────────────────────────────
+.sidebar-separator {
+    background: rgba(255, 255, 255, 0.06);
+    min-height: 1px;
+    margin: 6px 4px;
+}
+
+// ── Scrollable ──────────────────────────────────────────────
+.sidebar-scroll {
+    min-height: 200px;
+}
+
+// ── Notifications ───────────────────────────────────────────
+.sidebar-clear-btn {
+    font-size: 11px;
+    color: $muted;
+    padding: 2px 8px;
+    border-radius: 8px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba($red, 0.12);
+        color: $red;
+    }
+}
+
+.sidebar-empty {
+    color: rgba(255, 255, 255, 0.2);
+    padding: 16px 0;
+    font-size: 12px;
+}
+
+.sidebar-notif {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 4px;
+
+    .sidebar-notif-title {
+        font-size: 12px;
+        font-weight: bold;
+        color: $fg;
+    }
+
+    .sidebar-notif-body {
+        font-size: 11px;
+        color: $muted;
+        margin-top: 2px;
+    }
+
+    .sidebar-notif-dismiss {
+        color: $muted;
+        padding: 4px 6px;
+        border-radius: 6px;
+        margin-left: 6px;
+        transition: 180ms ease;
+
+        &:hover {
+            background: rgba($red, 0.12);
+            color: $red;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATION POPUPS
+// ═══════════════════════════════════════════════════════════
+window.NotificationPopups {
+    background: transparent;
+}
+
+.notif-popup-list {
+    padding: 10px 14px;
+}
+
+.notif-popup {
+    background: rgba(17, 17, 27, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    min-width: 340px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7),
+                0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.notif-popup-icon-wrap {
+    margin-right: 12px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 0;
+}
+
+.notif-popup-nerd-icon {
+    font-size: 20px;
+    color: $accent;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.notif-popup-fileicon {
+    min-width: 28px;
+    min-height: 28px;
+    margin: 6px;
+    border-radius: 8px;
+}
+
+.notif-popup-header {
+    margin-bottom: 2px;
+}
+
+.notif-popup-appname {
+    font-size: 10px;
+    font-weight: bold;
+    color: $muted;
+    letter-spacing: 0.5px;
+}
+
+.notif-popup-time {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.2);
+    margin-right: 6px;
+}
+
+.notif-popup-close {
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 13px;
+    padding: 2px 4px;
+    border-radius: 6px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba($red, 0.12);
+        color: $red;
+    }
+}
+
+.notif-popup-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: $fg;
+    margin-bottom: 1px;
+}
+
+.notif-popup-body {
+    font-size: 12px;
+    color: $fg-mid;
+    margin-top: 2px;
+}
+
+// ═══════════════════════════════════════════════════════════
+// WALLPAPER PICKER — bottom panel
+// ═══════════════════════════════════════════════════════════
+window.WallpaperPicker {
+    background: transparent;
+}
+
+.wp-panel {
+    background: $bg-light;
+    border-radius: 20px;
+    border: 1px solid $border;
+    box-shadow: 0 -4px 32px $shadow;
+    padding: 16px 20px;
+}
+
+.wp-header {
+    padding: 0 0 12px 0;
+}
+
+.wp-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: $accent;
+}
+
+.wp-close-btn {
+    color: $muted;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba($red, 0.15);
+        color: $red;
+    }
+}
+
+.wp-grid {
+    padding: 0;
+}
+
+.wp-item {
+    padding: 6px;
+    margin: 4px;
+    border-radius: 14px;
+    background: rgba($muted, 0.08);
+    transition: 200ms ease;
+    border: 2px solid transparent;
+
+    &:hover {
+        background: rgba($muted, 0.18);
+        border-color: rgba($fg, 0.15);
+    }
+
+    &.active {
+        border-color: $accent;
+        background: $accent-dim;
+
+        .wp-name {
+            color: $accent;
+        }
+    }
+}
+
+.wp-preview {
+    min-width: 140px;
+    min-height: 80px;
+    border-radius: 10px;
+}
+
+.wp-name {
+    font-size: 11px;
+    color: $fg-mid;
+    margin-top: 6px;
+    padding: 0 2px;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CENTER PANEL — Tabs + Clock + Calendar + Media + System
+// ═══════════════════════════════════════════════════════════
+window.CenterPanel {
+    background: transparent;
+}
+
+.cp-container {
+    background: #000000;
+    border-radius: 0 0 20px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: none;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+    padding: 12px 20px 20px;
+    min-width: 700px;
+}
+
+// ── Tab bar ─────────────────────────────────────────────────
+.cp-tabs {
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    margin-bottom: 14px;
+}
+
+.cp-tab {
+    padding: 6px 20px;
+    border-radius: 10px;
+    transition: 200ms ease;
+    color: $muted;
+    margin: 0 2px;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: $fg-mid;
+    }
+
+    &.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+}
+
+.cp-tab-icon {
+    font-size: 14px;
+    margin-right: 6px;
+}
+
+.cp-tab-label {
+    font-size: 12px;
+}
+
+// ── Brilho / Sistema tabs ────────────────────────────────────
+.cp-sistema {
+    padding: 10px 8px;
+}
+
+.cp-section-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: $muted;
+    margin-bottom: 6px;
+}
+
+.cp-slider-row {
+    padding: 4px 0;
+}
+
+.cp-slider-icon {
+    font-size: 16px;
+    color: $fg-mid;
+    min-width: 28px;
+    margin-right: 6px;
+    border-radius: 8px;
+    padding: 2px 4px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+.cp-slider {
+    margin: 0 6px;
+
+    trough {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        min-height: 6px;
+
+        highlight {
+            background: $fg-mid;
+            border-radius: 4px;
+            min-height: 6px;
+        }
+    }
+
+    slider {
+        background: $fg;
+        border-radius: 50%;
+        min-width: 14px;
+        min-height: 14px;
+        margin: -4px 0;
+    }
+}
+
+.cp-slider-value {
+    font-size: 11px;
+    color: $muted;
+    min-width: 36px;
+}
+
+.cp-separator {
+    background: rgba(255, 255, 255, 0.06);
+    min-height: 1px;
+    margin: 6px 4px;
+}
+
+.cp-info-row {
+    padding: 5px 4px;
+}
+
+.cp-info-icon {
+    font-size: 14px;
+    color: $muted;
+    min-width: 24px;
+    margin-right: 8px;
+}
+
+.cp-info-label {
+    font-size: 12px;
+    color: $muted;
+}
+
+.cp-info-value {
+    font-size: 12px;
+    color: $fg-mid;
+}
+
+// ── Home tab layout ─────────────────────────────────────────
+.cp-left {
+    min-width: 300px;
+    margin-right: 20px;
+}
+
+.cp-right {
+    min-width: 320px;
+}
+
+// ── Clock ───────────────────────────────────────────────────
+.cp-clock {
+    padding: 8px 0 16px;
+}
+
+.cp-clock-hour {
+    font-size: 72px;
+    font-weight: bold;
+    color: $fg;
+    letter-spacing: -2px;
+}
+
+.cp-clock-seconds {
+    font-size: 24px;
+    font-weight: bold;
+    color: $muted;
+    margin-left: 4px;
+    margin-bottom: 8px;
+}
+
+.cp-clock-minute {
+    font-size: 72px;
+    font-weight: bold;
+    color: $fg;
+    letter-spacing: -2px;
+    margin-top: -16px;
+}
+
+// ── Calendar ────────────────────────────────────────────────
+.cp-calendar {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 14px;
+}
+
+.cp-calendar-header {
+    margin-bottom: 6px;
+    padding: 0 4px;
+}
+
+.cp-calendar-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: $muted;
+    letter-spacing: 1px;
+}
+
+.cp-calendar-wrap {
+    calendar {
+        color: $fg;
+        font-size: 12px;
+        padding: 4px;
+
+        &.header {
+            color: $muted;
+            font-size: 0;
+        }
+
+        &.highlight {
+            color: $accent;
+        }
+
+        &:selected {
+            background: $accent;
+            color: $dark;
+            border-radius: 8px;
+        }
+
+        &:indeterminate {
+            color: rgba(255, 255, 255, 0.15);
+        }
+    }
+}
+
+// ── Media ───────────────────────────────────────────────────
+.cp-media {
+    min-height: 340px;
+}
+
+.cp-media-empty {
+    padding: 40px 20px;
+
+    .cp-media-empty-icon {
+        font-size: 42px;
+        color: rgba(255, 255, 255, 0.08);
+        margin-bottom: 8px;
+    }
+
+    .cp-media-empty-text {
+        font-size: 13px;
+        color: $muted;
+    }
+}
+
+.cp-player {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 0;
+}
+
+.cp-player-art {
+    min-height: 160px;
+    border-radius: 16px 16px 0 0;
+    background: rgba($accent, 0.06);
+}
+
+.cp-player-info {
+    padding: 14px 16px 4px;
+}
+
+.cp-player-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: $fg;
+    margin-bottom: 2px;
+}
+
+.cp-player-artist {
+    font-size: 13px;
+    color: $fg-mid;
+}
+
+.cp-player-controls {
+    padding: 10px 0 6px;
+}
+
+.cp-ctrl-btn {
+    padding: 8px 16px;
+    color: $fg;
+    border-radius: 12px;
+    font-size: 20px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+.cp-play-btn {
+    font-size: 32px;
+    color: $accent;
+    padding: 8px 20px;
+    margin: 0 6px;
+    background: rgba($accent, 0.08);
+    border-radius: 50%;
+
+    &:hover {
+        background: rgba($accent, 0.16);
+    }
+}
+
+.cp-player-progress {
+    padding: 4px 16px 14px;
+}
+
+.cp-progress-bar {
+    trough {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+        min-height: 5px;
+
+        highlight {
+            background: $accent;
+            border-radius: 3px;
+            min-height: 5px;
+        }
+    }
+
+    slider {
+        background: $fg;
+        border-radius: 50%;
+        min-width: 12px;
+        min-height: 12px;
+        margin: -4px 0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+}
+
+.cp-player-time {
+    padding: 4px 2px 0;
+
+    .cp-time-label {
+        font-size: 10px;
+        color: $muted;
+    }
+}
+
+.cp-player-dots {
+    padding: 8px 0 4px;
+}
+
+.cp-dot {
+    padding: 3px;
+    margin: 0 3px;
+    border-radius: 50%;
+
+    .cp-dot-inner {
+        min-width: 6px;
+        min-height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        transition: 200ms ease;
+    }
+
+    &:hover .cp-dot-inner {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    &.active .cp-dot-inner {
+        min-width: 18px;
+        border-radius: 4px;
+        background: $accent;
+    }
+}
+
+// ── Wallpaper tab (inside center panel) ─────────────────────
+.cp-wp {
+    min-width: 680px;
+}
+
+.cp-wp-header {
+    padding: 0 4px 10px;
+}
+
+.cp-wp-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: $fg-mid;
+}
+
+.cp-wp-refresh-btn {
+    font-size: 11px;
+    color: $fg-mid;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    margin-right: 6px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+}
+
+.cp-wp-folder-btn {
+    font-size: 11px;
+    color: $fg-mid;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+}
+
+.cp-wp-folder-icon {
+    margin-right: 6px;
+    font-size: 14px;
+}
+
+.cp-wp-scroll {
+    min-height: 280px;
+}
+
+.cp-wp-item {
+    padding: 4px;
+    margin: 3px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: 200ms ease;
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    &.active {
+        border-color: $accent;
+    }
+}
+
+.cp-wp-preview {
+    min-width: 150px;
+    min-height: 90px;
+    border-radius: 8px;
+}
+
+// ── Power buttons ───────────────────────────────────────────
+.sidebar-power {
+    padding: 6px 0 2px 0;
+}
+
+.power-btn {
+    font-size: 18px;
+    color: $muted;
+    padding: 8px 16px;
+    border-radius: 10px;
+    margin: 0 3px;
+    transition: 200ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: $fg;
+    }
+
+    &.shutdown:hover {
+        background: rgba($red, 0.1);
+        color: $red;
+    }
+}

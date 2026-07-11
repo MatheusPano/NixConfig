@@ -9,6 +9,26 @@ in
   services.gvfs.enable = true;
 
   programs.nix-ld.enable = true;
+  # Libs necessárias para rodar binários pré-compilados que o FVM (Flutter SDK)
+  # e o Gradle/Android baixam fora do Nix (dart, gen_snapshot, aapt2, emulador...).
+  programs.nix-ld.libraries = with pkgs; [
+    stdenv.cc.cc.lib
+    zlib
+    libGL
+    glib
+    fontconfig
+    freetype
+    libpulseaudio
+    nss
+    nspr
+    expat
+    libx11
+    libxext
+    libxrender
+    libxtst
+    libxi
+    libxcb
+  ];
   services.udev.packages = [ pkgs.platformio-core.udev ];
 
   fonts.packages = with pkgs; [
@@ -17,6 +37,7 @@ in
 
   environment.systemPackages = with pkgs; [
     zen-browser
+    claude-desktop-fhs
     brightnessctl
     vscode
     ghostty

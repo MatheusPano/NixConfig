@@ -7,6 +7,9 @@
     # Core do sistema
     ../../nixos/core
 
+    # Overlays
+    ../../nixos/overlays
+
     # Modulos do sistema
     ../../nixos/modules/bluetooth.nix
     ../../nixos/modules/docker.nix

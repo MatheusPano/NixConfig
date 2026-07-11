@@ -7,6 +7,7 @@
     ./modules/hyprland/default.nix
     ./modules/waybar/default.nix
     ./modules/ags/default.nix
+    ./modules/flutter/default.nix
     ./modules/packages.nix
   ];
 

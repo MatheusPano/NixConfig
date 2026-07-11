@@ -1,10 +1,6 @@
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 
-let
-  zen-browser = inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default;
-in
 {
-  services.xserver.enable = true;
   services.printing.enable = true;
   services.gvfs.enable = true;
 
@@ -35,51 +31,12 @@ in
     nerd-fonts.jetbrains-mono
   ];
 
+  # So o essencial do sistema; apps de usuario ficam em
+  # home/matheus/modules/packages.nix
   environment.systemPackages = with pkgs; [
-    zen-browser
-    claude-desktop-fhs
-    brightnessctl
-    vscode
-    ghostty
-    vicinae
     git
-    spotify
-    google-chrome
-    networkmanagerapplet
-    grim
-    slurp
-    satty
-    wl-clipboard
-    claude-code
-    vscode-extensions.anthropic.claude-code
-    python3
-    pavucontrol
-    overskride
-    blueman
-    obsidian
-    btop
-    lazydocker
-    nautilus
-    waybar
-    ags
-    astal.io
-    astal.astal3
-    astal.gjs
-    astal.hyprland
-    astal.wireplumber
-    astal.network
-    astal.bluetooth
-    astal.battery
-    astal.mpris
-    astal.notifd
-    swaynotificationcenter
-    libnotify
-    awww
-    rofi
-    kitty
-    bibata-cursors
-    nordzy-cursor-theme
-    phinger-cursors
+    brightnessctl
+    kitty # terminal de emergencia (o Hyprland busca por ele no padrao)
   ];
 
   environment.sessionVariables = {

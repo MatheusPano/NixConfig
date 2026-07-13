@@ -11,4 +11,7 @@
   # Gerenciamento termico da Intel e perfis de energia (bateria/desempenho).
   services.thermald.enable = true;
   services.power-profiles-daemon.enable = true;
+
+  # Info de bateria via D-Bus (AstalBattery/AGS usa pra ser reativo).
+  services.upower.enable = true;
 }

@@ -64,6 +64,10 @@ window.Bar {
     background: #000000;
 }
 
+window.BarFillet {
+    background: transparent;
+}
+
 // ── Launcher ───────────────────────────────────────────────
 .launcher {
     color: $accent;
@@ -1413,4 +1417,967 @@ window.CenterPanel {
         background: rgba($red, 0.1);
         color: $red;
     }
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOVOS COMPONENTES (calendário nav, media volume, home,
+// sistema, wallpaper options, quick toggles, wifi pw, clip)
+// ═══════════════════════════════════════════════════════════
+
+// ── Calendar: navegação + agenda ────────────────────────────
+.calendar-header {
+    margin-bottom: 8px;
+}
+
+.cal-nav-btn {
+    color: $fg-mid;
+    font-size: 14px;
+    padding: 2px 10px;
+    margin-left: 4px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+        color: $accent;
+    }
+}
+
+.cal-today-btn {
+    font-size: 11px;
+}
+
+.calendar-agenda {
+    margin-top: 10px;
+    padding: 10px 4px 0;
+    border-top: 1px solid $border;
+}
+
+.calendar-agenda-title {
+    font-size: 10px;
+    font-weight: bold;
+    color: $muted;
+    margin-bottom: 4px;
+}
+
+.calendar-agenda-item {
+    font-size: 11px;
+    color: $fg-mid;
+    padding: 2px 0;
+}
+
+.calendar-agenda-empty {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.2);
+    padding: 4px 0;
+}
+
+// ── Media popup: volume ─────────────────────────────────────
+.media-volume {
+    padding: 4px 2px 10px;
+}
+
+.media-volume-icon {
+    font-size: 13px;
+    color: $muted;
+    min-width: 24px;
+}
+
+.media-volume-bar {
+    margin: 0 6px;
+
+    trough {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+        min-height: 4px;
+
+        highlight {
+            background: $accent;
+            border-radius: 3px;
+            min-height: 4px;
+        }
+    }
+
+    slider {
+        background: $fg;
+        border-radius: 50%;
+        min-width: 10px;
+        min-height: 10px;
+        margin: -3px 0;
+    }
+}
+
+.media-volume-value {
+    font-size: 10px;
+    color: $muted;
+    min-width: 32px;
+}
+
+// ── Center panel: clima ─────────────────────────────────────
+.cp-weather {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+    padding: 10px 16px;
+    margin: 0 20px 12px;
+}
+
+.cp-weather-icon {
+    font-size: 28px;
+    color: $accent;
+    margin-right: 12px;
+}
+
+.cp-weather-temp {
+    font-size: 18px;
+    font-weight: bold;
+    color: $fg;
+}
+
+.cp-weather-desc {
+    font-size: 11px;
+    color: $muted;
+}
+
+// ── Center panel: apps favoritos ────────────────────────────
+.cp-apps {
+    padding: 4px 0;
+}
+
+.cp-app-btn {
+    font-size: 20px;
+    color: $fg-mid;
+    padding: 8px 12px;
+    margin: 0 3px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+        color: $accent;
+    }
+}
+
+// ── Center panel: notas rápidas / todo ──────────────────────
+.cp-todos-col {
+    min-width: 240px;
+    margin-left: 20px;
+}
+
+.cp-todos {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 12px;
+}
+
+.cp-todo-input {
+    margin-bottom: 6px;
+}
+
+.cp-todo-entry {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 5px 10px;
+    color: $fg;
+    font-size: 12px;
+    caret-color: $fg;
+
+    selection {
+        background: $accent-dim;
+    }
+}
+
+.cp-todo-add {
+    font-size: 14px;
+    color: $fg-mid;
+    padding: 4px 10px;
+    margin-left: 4px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+}
+
+.cp-todo-scroll {
+    min-height: 220px;
+}
+
+.cp-todo-row {
+    padding: 3px 2px;
+    border-radius: 8px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.04);
+    }
+}
+
+.cp-todo-check {
+    font-size: 14px;
+    color: $muted;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: 180ms ease;
+
+    &:hover { color: $fg; }
+    &.done { color: $accent; }
+}
+
+.cp-todo-text {
+    font-size: 12px;
+    color: $fg;
+
+    &.done {
+        color: $muted;
+    }
+}
+
+.cp-todo-del {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.15);
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba($red, 0.12);
+        color: $red;
+    }
+}
+
+.cp-todo-empty {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.2);
+    padding: 12px 0;
+}
+
+// ── Center panel: sistema com levelbars ─────────────────────
+.cp-level-row {
+    padding: 6px 4px;
+
+    .cp-info-label {
+        min-width: 70px;
+    }
+}
+
+.cp-levelbar {
+    margin: 0 10px;
+
+    trough {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        min-height: 8px;
+    }
+
+    block.filled {
+        background: $accent;
+        border-radius: 4px;
+        min-height: 8px;
+    }
+
+    block.empty {
+        background: transparent;
+        min-height: 8px;
+    }
+}
+
+.cp-level-value {
+    font-size: 11px;
+    color: $fg-mid;
+    min-width: 90px;
+}
+
+.cp-profiles {
+    padding: 2px 0;
+}
+
+.cp-profile-btn {
+    font-size: 12px;
+    color: $muted;
+    padding: 8px 10px;
+    margin: 0 3px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: $fg-mid;
+    }
+
+    &.active {
+        background: $accent-dim;
+        color: $accent;
+    }
+}
+
+.cp-profile-icon {
+    margin-right: 6px;
+    font-size: 14px;
+}
+
+// ── Center panel: opções de wallpaper ───────────────────────
+.cp-wp-options {
+    padding: 0 4px 10px;
+}
+
+.cp-option-toggle {
+    font-size: 11px;
+    color: $fg-mid;
+    padding: 4px 12px;
+    margin-right: 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid transparent;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+
+    &.active {
+        background: $accent-dim;
+        color: $accent;
+        border-color: rgba(122, 162, 247, 0.4);
+    }
+}
+
+.cp-accent-chip {
+    min-width: 14px;
+    min-height: 14px;
+    border-radius: 50%;
+    margin-left: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+// ── Sidebar: screenshots / gravação ─────────────────────────
+.sidebar-shot-btn {
+    font-size: 15px;
+    color: $fg-mid;
+    padding: 5px 9px;
+    margin-left: 4px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+
+    &.recording {
+        background: rgba($red, 0.15);
+        color: $red;
+    }
+}
+
+// ── Sidebar: toggles rápidos ────────────────────────────────
+.qs-toggles {
+    margin-bottom: 8px;
+}
+
+.qs-toggle {
+    padding: 10px 6px;
+    margin: 2px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid transparent;
+    color: $muted;
+    transition: 200ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: $fg-mid;
+    }
+
+    &.active {
+        background: $accent-dim;
+        color: $accent;
+        border-color: rgba(122, 162, 247, 0.4);
+    }
+}
+
+.qs-toggle-icon {
+    font-size: 17px;
+}
+
+.qs-toggle-label {
+    font-size: 9px;
+    margin-top: 3px;
+}
+
+// ── Sidebar: notificações ricas ─────────────────────────────
+.sidebar-notif-icon-wrap {
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-right: 10px;
+}
+
+.sidebar-notif-fileicon {
+    min-width: 22px;
+    min-height: 22px;
+    margin: 5px;
+    border-radius: 6px;
+}
+
+.sidebar-notif-nerd-icon {
+    font-size: 15px;
+    color: $accent;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.sidebar-notif-app {
+    font-size: 9px;
+    font-weight: bold;
+    color: $muted;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-notif-time {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.25);
+    margin-left: 6px;
+}
+
+.sidebar-notif-actions {
+    margin-top: 6px;
+}
+
+.sidebar-notif-action {
+    font-size: 10px;
+    color: $fg-mid;
+    padding: 3px 12px;
+    margin-right: 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+        color: $accent;
+    }
+}
+
+// ── Sidebar: wifi com senha ─────────────────────────────────
+.sidebar-wifi-pw {
+    padding: 4px 10px 8px;
+}
+
+.sidebar-wifi-entry {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 5px 10px;
+    color: $fg;
+    font-size: 12px;
+    caret-color: $fg;
+
+    selection {
+        background: $accent-dim;
+    }
+}
+
+.sidebar-wifi-connect {
+    font-size: 11px;
+    padding: 4px 12px;
+    margin-left: 6px;
+    border-radius: 8px;
+    background: $accent-dim;
+    color: $accent;
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-hover;
+    }
+}
+
+.sidebar-wifi-error {
+    font-size: 10px;
+    color: $red;
+    margin-top: 4px;
+}
+
+// ── Sidebar: mixer por app ──────────────────────────────────
+.sidebar-stream-name {
+    font-size: 11px;
+    color: $fg-mid;
+    margin-left: 6px;
+}
+
+// ── Power: confirmação armada ───────────────────────────────
+.power-btn.armed {
+    background: rgba($red, 0.18);
+    color: $red;
+}
+
+.cp-weather-city {
+    font-size: 10px;
+    color: rgba(192, 202, 245, 0.4);
+    margin-top: 1px;
+}
+
+.cp-weather {
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+.cp-weather-edit {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+    padding: 8px 10px;
+    margin: 0 20px 12px;
+}
+
+.cp-weather-entry {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 5px 10px;
+    color: #c0caf5;
+    font-size: 12px;
+    caret-color: #c0caf5;
+
+    selection {
+        background: rgba(122, 162, 247, 0.15);
+    }
+}
+
+// ── Dynamic Island (pill central) ───────────────────────────
+.island {
+    color: $fg;
+    font-size: 13px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+    }
+
+    label {
+        color: $fg;
+    }
+}
+
+.island-event {
+    padding: 0 6px;
+}
+
+.island-icon {
+    font-size: 15px;
+    margin-right: 8px;
+    color: $accent;
+}
+
+.island-bar {
+    margin-right: 8px;
+
+    trough {
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 3px;
+        min-height: 5px;
+        min-width: 110px;
+    }
+
+    block.filled {
+        background: $fg;
+        border-radius: 3px;
+        min-height: 5px;
+    }
+
+    block.empty {
+        background: transparent;
+        min-height: 5px;
+    }
+}
+
+.island-text {
+    font-size: 12px;
+    color: $fg-mid;
+}
+
+// cores por tipo de evento
+.island-media .island-icon { color: $purple; }
+.island-notif .island-icon { color: $yellow; }
+.island-bt .island-icon { color: $cyan; }
+.island-mic .island-icon { color: $red; }
+
+// ── Island: estado ocioso (app + chip de mídia) ─────────────
+.island-app-icon {
+    font-size: 15px;
+    color: $accent;
+    margin-right: 8px;
+}
+
+.island-app-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: $fg;
+}
+
+.island-chip {
+    margin-left: 8px;
+    padding: 1px 10px;
+    border-radius: 9px;
+    background: rgba(187, 154, 247, 0.1);
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(187, 154, 247, 0.22);
+    }
+}
+
+.island-chip-icon {
+    font-size: 13px;
+    color: $purple;
+    margin-right: 6px;
+}
+
+.island-chip-title {
+    font-size: 11px;
+    color: $fg-mid;
+}
+
+@keyframes island-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.35; }
+    100% { opacity: 1; }
+}
+
+.island-chip.playing .island-chip-icon {
+    animation: island-pulse 2.2s ease-in-out infinite;
+}
+
+// ── Media popup: refinamentos ───────────────────────────────
+.media-overlay {
+    background: linear-gradient(to bottom,
+        rgba(0, 0, 0, 0.2),
+        rgba(0, 0, 0, 0.75) 90px,
+        #000000 130px);
+    border-radius: 20px;
+}
+
+.media-art {
+    min-width: 110px;
+    min-height: 110px;
+}
+
+.media-live {
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: $muted;
+    padding: 2px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+
+    &.playing {
+        color: $green;
+        background: rgba(158, 206, 106, 0.1);
+    }
+}
+
+.media-ctrl-btn:disabled {
+    color: rgba(255, 255, 255, 0.15);
+}
+
+// ── Center panel: aba Mídia ─────────────────────────────────
+.cp-mediatab {
+    min-height: 300px;
+}
+
+.cp-mt {
+    padding: 16px 8px;
+}
+
+.cp-mt-art {
+    min-width: 200px;
+    min-height: 200px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-right: 24px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.cp-mt-art-fallback {
+    font-size: 56px;
+    color: rgba(255, 255, 255, 0.12);
+}
+
+.cp-mt-info {
+    padding: 0 4px;
+}
+
+.cp-mt-title {
+    font-size: 19px;
+    font-weight: bold;
+    color: $fg;
+    margin-bottom: 2px;
+}
+
+.cp-mt-album {
+    font-size: 12px;
+    color: $muted;
+    margin-bottom: 1px;
+}
+
+.cp-mt-artist {
+    font-size: 13px;
+    color: $fg-mid;
+}
+
+.cp-mt-controls {
+    padding: 12px 0 6px;
+}
+
+.cp-mt-progress {
+    padding: 2px 8px 8px;
+
+    .cp-time-label {
+        font-size: 10px;
+        color: $muted;
+        margin-top: 4px;
+    }
+}
+
+.cp-mt-chip {
+    padding: 4px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+    }
+}
+
+.cp-mt-chip-icon {
+    font-size: 14px;
+    color: $accent;
+    margin-right: 8px;
+}
+
+.cp-mt-chip-name {
+    font-size: 12px;
+    color: $fg;
+}
+
+.cp-mt-chip-swap {
+    font-size: 12px;
+    color: $muted;
+    margin-left: 8px;
+}
+
+.cp-mt-volume {
+    margin-left: 20px;
+    padding: 8px 4px;
+}
+
+.cp-mt-vol-icon {
+    font-size: 15px;
+    color: $fg-mid;
+    margin-bottom: 8px;
+}
+
+.cp-mt-vol-slider {
+    min-height: 150px;
+
+    trough {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        min-width: 6px;
+
+        highlight {
+            background: $accent;
+            border-radius: 4px;
+            min-width: 6px;
+        }
+    }
+
+    slider {
+        background: $fg;
+        border-radius: 50%;
+        min-width: 14px;
+        min-height: 14px;
+        margin: 0 -4px;
+    }
+}
+
+.cp-mt-vol-value {
+    font-size: 10px;
+    color: $muted;
+    margin-top: 8px;
+}
+
+// ── Aba Mídia: chip row + menu + atalhos ────────────────────
+.cp-mt-chiprow {
+    padding: 2px 0;
+}
+
+.cp-mt-mini {
+    font-size: 14px;
+    color: $muted;
+    padding: 4px 10px;
+    margin: 0 4px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: $fg;
+    }
+}
+
+.cp-mt-kill:hover {
+    background: rgba(247, 118, 142, 0.15);
+    color: $red;
+}
+
+.cp-mt-menu {
+    margin-top: 6px;
+    padding: 4px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid $border;
+    min-width: 180px;
+}
+
+.cp-mt-menu-item {
+    padding: 6px 12px;
+    border-radius: 9px;
+    transition: 150ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    &.active {
+        background: $accent-dim;
+    }
+}
+
+.cp-mt-menu-check {
+    font-size: 12px;
+    color: $accent;
+    margin-left: 10px;
+}
+
+// menu de players flutuante (overlay) — fundo sólido + sombra
+.cp-mt-menu {
+    background: rgba(24, 24, 34, 0.98);
+    border: 1px solid $border-light;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65);
+}
+
+// painel central fundido com a barra (curvas no topo, sem borda lateral)
+.cp-container {
+    border: none;
+}
+
+
+// moldura da tela (janela única com cairo — ver Frame.tsx)
+.frame-fill {
+    background: #000000;
+}
+
+// ── Abas formato referência: ícone em cima, sublinhado na ativa ──
+.cp-tabs {
+    background: transparent;
+    border-radius: 0;
+    padding: 4px 30px 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cp-tab {
+    padding: 8px 20px 9px;
+    margin: 0 6px;
+    border-radius: 0;
+    border-bottom: 3px solid transparent;
+    color: $muted;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: $fg-mid;
+    }
+
+    &.active {
+        background: transparent;
+        color: $accent;
+        border-bottom: 3px solid $accent;
+    }
+}
+
+.cp-tab-icon {
+    font-size: 16px;
+    margin-right: 0;
+}
+
+.cp-tab-label {
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+// ── Sombras sutis: painéis flutuando de leve ────────────────
+.cp-container {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.sidebar {
+    box-shadow: -4px 0 14px rgba(0, 0, 0, 0.3);
+}
+
+// ── Aba Personalização ──────────────────────────────────────
+.cp-pers-section {
+    font-size: 11px;
+    font-weight: bold;
+    color: $muted;
+    margin: 10px 4px 6px;
+}
+
+.cp-swatch {
+    padding: 6px 10px;
+    margin-right: 8px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid transparent;
+    transition: 180ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    &.active {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: $accent;
+    }
+}
+
+.cp-swatch-circle {
+    min-width: 26px;
+    min-height: 26px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.cp-swatch-icon {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.cp-swatch-label {
+    font-size: 11px;
+    color: $fg-mid;
+    margin-left: 8px;
 }

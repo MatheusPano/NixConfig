@@ -2,8 +2,9 @@
 # Wrapper para rodar AGS com os paths corretos no NixOS
 
 SYSTEM_PATH=$(readlink -f /run/current-system/sw)
+USER_PATH=$(readlink -f "/etc/profiles/per-user/$USER")
 
-export GI_TYPELIB_PATH="$SYSTEM_PATH/lib/girepository-1.0:${GI_TYPELIB_PATH}"
+export GI_TYPELIB_PATH="$SYSTEM_PATH/lib/girepository-1.0:$USER_PATH/lib/girepository-1.0:${GI_TYPELIB_PATH}"
 
 # Encontrar schema do notifd
 for dir in /nix/store/*astal-notifd*/share/gsettings-schemas/*/glib-2.0/schemas; do

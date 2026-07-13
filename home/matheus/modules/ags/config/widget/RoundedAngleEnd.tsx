@@ -2,9 +2,11 @@ import { Gtk } from "astal/gtk3"
 
 type Place = "topleft" | "topright"
 
-export default function RoundedAngleEnd({ place }: { place: Place }) {
+export default function RoundedAngleEnd({ place, className = "angle" }: {
+    place: Place, className?: string
+}) {
     return <drawingarea
-        className="angle"
+        className={className}
         setup={(widget) => {
             widget.set_size_request(2, 2)
         }}

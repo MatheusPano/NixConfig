@@ -1,17 +1,17 @@
 import { App, Astal, Gtk, Gdk } from "astal/gtk3"
-import { Variable, GLib, bind, exec } from "astal"
+import { Variable, GLib, bind } from "astal"
 import Hyprland from "gi://AstalHyprland"
+import { batteryInfo } from "../lib/battery"
 import Wp from "gi://AstalWp"
 import Network from "gi://AstalNetwork"
 import Bluetooth from "gi://AstalBluetooth"
-import Mpris from "gi://AstalMpris"
 import Notifd from "gi://AstalNotifd"
 
 import { calendarVisible } from "./CalendarPopup"
-import { mediaVisible } from "./MediaPopup"
-import { centerPanelVisible } from "./CenterPanel"
 import { qsVisible } from "./QuickSettings"
 import RoundedAngleEnd from "./RoundedAngleEnd"
+import DynamicIsland from "./DynamicIsland"
+import { zenMode } from "../lib/zen"
 
 
 // ── Workspaces (dots) ──────────────────────────────────────
@@ -34,52 +34,6 @@ function Workspaces() {
             </button>
         )}
     </box>
-}
-
-// ── Media indicator (icon in left pill) ────────────────────
-function MediaIndicator() {
-    const mpris = Mpris.get_default()
-
-    return <button
-        className="media-indicator"
-        onClicked={() => mediaVisible.set(!mediaVisible.get())}
-    >
-        {bind(mpris, "players").as(players => {
-            if (players.length === 0) return <label label="" />
-            return <label label="󰎆" />
-        })}
-    </button>
-}
-
-// ── Active Window / Desktop (center pill) ──────────────────
-function ActiveWindow() {
-    const hypr = Hyprland.get_default()
-
-    const label = Variable("Desktop")
-
-    const update = () => {
-        const client = hypr.get_focused_client()
-        if (client) {
-            const title = client.get_title()
-            if (title && title.length > 0) {
-                label.set(title.length > 40 ? title.substring(0, 40) + "..." : title)
-            } else {
-                label.set(client.get_class() || "Desktop")
-            }
-        } else {
-            label.set("Desktop")
-        }
-    }
-
-    hypr.connect("notify::focused-client", update)
-    update()
-
-    return <button
-        className="active-window"
-        onClicked={() => centerPanelVisible.set(!centerPanelVisible.get())}
-    >
-        <label label={label()} truncate maxWidthChars={45} />
-    </button>
 }
 
 // ── Clock ──────────────────────────────────────────────────
@@ -119,10 +73,10 @@ function VolumeIndicator() {
     </button>
 }
 
-// ── Battery ────────────────────────────────────────────────
+// ── Battery (UPower quando disponível, senão sysfs) ────────
 function BatteryWidget() {
-    const getBatIcon = (percent: number, status: string) => {
-        if (status === "Charging") return "󰂄"
+    const getBatIcon = (percent: number, charging: boolean) => {
+        if (charging) return "󰂄"
         if (percent >= 90) return "󰁹"
         if (percent >= 70) return "󰂀"
         if (percent >= 50) return "󰁾"
@@ -131,20 +85,10 @@ function BatteryWidget() {
         return "󰂃"
     }
 
-    const readBat = () => {
-        try {
-            const cap = Number(exec("cat /sys/class/power_supply/BAT1/capacity"))
-            const status = exec("cat /sys/class/power_supply/BAT1/status").trim()
-            return `${getBatIcon(cap, status)}`
-        } catch {
-            return ""
-        }
-    }
-
-    const batLabel = Variable(readBat()).poll(30000, readBat)
-
-    return <box className="battery">
-        <label label={batLabel()} />
+    return <box className="battery" visible={batteryInfo().as(i => i.present)}
+        tooltipText={batteryInfo().as(i => `Bateria: ${i.percent}%`)}
+    >
+        <label label={batteryInfo().as(i => getBatIcon(i.percent, i.charging))} />
     </box>
 }
 
@@ -206,11 +150,72 @@ function NotifIndicator() {
     </button>
 }
 
+// ── Concave fillet where the side pills meet the frame ─────
+const FRAME_WIDTH = 8   // deve acompanhar o FRAME_WIDTH do Frame.tsx
+const FILLET_SIZE = 16
+
+function ConcaveCorner({ side }: { side: "left" | "right" }) {
+    const s = FILLET_SIZE
+    return <drawingarea
+        className="angle"
+        setup={(widget) => widget.set_size_request(s, s)}
+        onDraw={(widget, cr) => {
+            const context = widget.get_style_context()
+
+            cr.save()
+            cr.setOperator(0) // CLEAR
+            cr.paint()
+            cr.restore()
+
+            if (side === "left") {
+                cr.moveTo(s, 0)
+                cr.arcNegative(s, s, s, -Math.PI / 2, Math.PI)
+                cr.lineTo(0, 0)
+                cr.closePath()
+            } else {
+                cr.moveTo(0, 0)
+                cr.lineTo(s, 0)
+                cr.lineTo(s, s)
+                cr.arcNegative(0, s, s, 0, -Math.PI / 2)
+                cr.closePath()
+            }
+
+            cr.clip()
+            Gtk.render_background(context, cr, 0, 0, s, s)
+        }}
+    />
+}
+
+function BarFillet(gdkmonitor: Gdk.Monitor, side: "left" | "right", bar: any) {
+    const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
+    return <window
+        name={`bar-fillet-${side}`}
+        className="BarFillet"
+        gdkmonitor={gdkmonitor}
+        exclusivity={Astal.Exclusivity.IGNORE}
+        anchor={side === "left" ? TOP | LEFT : TOP | RIGHT}
+        layer={Astal.Layer.OVERLAY}
+        keymode={Astal.Keymode.NONE}
+        clickThrough={true}
+        marginLeft={side === "left" ? FRAME_WIDTH : 0}
+        marginRight={side === "right" ? FRAME_WIDTH : 0}
+        application={App}
+        setup={(self: any) => {
+            const sync = () => { self.marginTop = bar.get_allocated_height() }
+            bar.connect("size-allocate", sync)
+            sync()
+        }}
+    >
+        <ConcaveCorner side={side} />
+    </window>
+}
+
 // ── Bar Layout (3 separate pills) ──────────────────────────
 export default function Bar(gdkmonitor: Gdk.Monitor) {
     const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
+    const barRevealed = Variable(true)
 
-    return <window
+    const bar = <window
         name="bar"
         className="Bar"
         gdkmonitor={gdkmonitor}
@@ -221,24 +226,30 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
         margin_right={0}
         application={App}
     >
+        <revealer
+            revealChild={barRevealed()}
+            transitionType={Gtk.RevealerTransitionType.SLIDE_UP}
+            transitionDuration={250}
+        >
+        {/* valign FILL: os 3 pills sempre esticam até a altura da barra,
+            então mudanças de conteúdo nunca desalinham os fillets */}
         <centerbox className="bar-container">
-            <box halign={Gtk.Align.START} valign={Gtk.Align.START}>
-                <box className="pill pill-left">
+            <box halign={Gtk.Align.START} valign={Gtk.Align.FILL}>
+                <box className="pill pill-left" valign={Gtk.Align.FILL}>
                     <Workspaces />
-                    <MediaIndicator />
                 </box>
                 <RoundedAngleEnd place="topright" />
             </box>
-            <box halign={Gtk.Align.CENTER} valign={Gtk.Align.START}>
+            <box halign={Gtk.Align.CENTER} valign={Gtk.Align.FILL}>
                 <RoundedAngleEnd place="topleft" />
-                <box className="pill pill-center">
-                    <ActiveWindow />
+                <box className="pill pill-center" valign={Gtk.Align.FILL}>
+                    <DynamicIsland />
                 </box>
                 <RoundedAngleEnd place="topright" />
             </box>
-            <box halign={Gtk.Align.END} valign={Gtk.Align.START}>
+            <box halign={Gtk.Align.END} valign={Gtk.Align.FILL}>
                 <RoundedAngleEnd place="topleft" />
-                <box className="pill pill-right">
+                <box className="pill pill-right" valign={Gtk.Align.FILL}>
                     <NetworkIndicator />
                     <VolumeIndicator />
                     <BluetoothIndicator />
@@ -248,5 +259,29 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
                 </box>
             </box>
         </centerbox>
+        </revealer>
     </window>
+
+    const filletLeft: any = BarFillet(gdkmonitor, "left", bar)
+    const filletRight: any = BarFillet(gdkmonitor, "right", bar)
+
+    // modo zen: só o revealer anima — a janela nunca é escondida.
+    // Esconder/remapear a janela fazia o layer-shell registrar a zona
+    // exclusiva com a altura errada (bug do gap do topo ao sair do zen);
+    // com o revealer a janela colapsa pra ~0 e a zona acompanha sempre.
+    zenMode.subscribe(zen => {
+        if (zen) {
+            filletLeft.visible = false
+            filletRight.visible = false
+            barRevealed.set(false)
+        } else {
+            barRevealed.set(true)
+            setTimeout(() => {
+                filletLeft.visible = true
+                filletRight.visible = true
+            }, 270)
+        }
+    })
+
+    return bar
 }

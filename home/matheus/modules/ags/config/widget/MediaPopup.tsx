@@ -1,30 +1,26 @@
-import { App, Astal, Gtk, Gdk } from "astal/gtk3"
+import { Gtk, Gdk } from "astal/gtk3"
 import { Variable, bind } from "astal"
 import Mpris from "gi://AstalMpris"
+import PopupWindow from "../lib/PopupWindow"
+import { formatTime, getPlayerIcon } from "../lib/utils"
 
 export const mediaVisible = Variable(false)
-
-function formatTime(secs: number): string {
-    if (secs <= 0) return "0:00"
-    const m = Math.floor(secs / 60)
-    const s = Math.floor(secs % 60)
-    return `${m}:${String(s).padStart(2, "0")}`
-}
-
-function getPlayerIcon(identity: string): string {
-    const id = identity.toLowerCase()
-    if (id.includes("spotify")) return "󰓇"
-    if (id.includes("firefox") || id.includes("mozilla")) return "󰈹"
-    if (id.includes("chrome") || id.includes("chromium")) return "󰊯"
-    if (id.includes("vlc")) return "󰕼"
-    if (id.includes("mpv")) return "󰐹"
-    return "󰎆"
-}
 
 function PlayerCard({ player }: { player: any }) {
     const positionPoll = Variable(0).poll(1000, () => player.get_position())
 
-    return <box vertical className="media-card">
+    // não gasta ciclo com o popup fechado
+    const unsub = mediaVisible.subscribe(v =>
+        v ? positionPoll.startPoll() : positionPoll.stopPoll()
+    )
+    if (!mediaVisible.get()) positionPoll.stopPoll()
+
+    return <box vertical className="media-card"
+        setup={(self: any) => self.connect("destroy", () => {
+            unsub()
+            positionPoll.drop()
+        })}
+    >
         {/* Backdrop art */}
         <box
             className="media-backdrop"
@@ -148,6 +144,24 @@ function PlayerCard({ player }: { player: any }) {
                     )} />
                 </button>
             </box>
+
+            {/* Volume do player (se o player expõe) */}
+            <box
+                className="media-volume"
+                visible={bind(player, "volume").as(v => v >= 0)}
+            >
+                <label className="media-volume-icon" label="󰕾" />
+                <slider
+                    className="media-volume-bar"
+                    hexpand
+                    value={bind(player, "volume").as(v => Math.max(0, v))}
+                    onDragged={(self: any) => player.set_volume(self.value)}
+                />
+                <label
+                    className="media-volume-value"
+                    label={bind(player, "volume").as(v => `${Math.round(Math.max(0, v) * 100)}%`)}
+                />
+            </box>
         </box>
     </box>
 }
@@ -187,32 +201,13 @@ function PlayerControls() {
 }
 
 export default function MediaPopup(gdkmonitor: Gdk.Monitor) {
-    const { TOP, BOTTOM, LEFT, RIGHT } = Astal.WindowAnchor
-
-    return <window
+    return <PopupWindow
         name="media-popup"
         className="MediaPopup"
         gdkmonitor={gdkmonitor}
-        anchor={TOP | BOTTOM | LEFT | RIGHT}
-        application={App}
-        visible={mediaVisible()}
-        keymode={Astal.Keymode.ON_DEMAND}
-        onKeyPressEvent={(_: any, event: any) => {
-            if (event.get_keyval()[1] === Gdk.KEY_Escape)
-                mediaVisible.set(false)
-        }}
+        visible={mediaVisible}
+        contentCss="margin-top: 38px;"
     >
-        <eventbox onClick={() => mediaVisible.set(false)}>
-            <box halign={Gtk.Align.CENTER} valign={Gtk.Align.START}
-                css="margin-top: 38px;"
-            >
-                <eventbox onClick={(_: any, event: any) => {
-                    event.stop_propagation?.()
-                    return true
-                }}>
-                    <PlayerControls />
-                </eventbox>
-            </box>
-        </eventbox>
-    </window>
+        <PlayerControls />
+    </PopupWindow>
 }

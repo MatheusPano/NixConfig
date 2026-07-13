@@ -1,84 +1,10 @@
 import { App, Astal, Gtk, Gdk } from "astal/gtk3"
-import { Variable, GLib, bind, timeout } from "astal"
+import { Variable, GLib, timeout } from "astal"
 import Notifd from "gi://AstalNotifd"
+import { stripHtml } from "../lib/utils"
+import { getNerdIcon, getFileIcon, getThemeIconName, cleanAppName } from "../lib/notifIcons"
 
 const TIMEOUT_MS = 5000
-
-function stripHtml(text: string): string {
-    return text
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<[^>]*>/g, "")
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, "\"")
-        .replace(/&#39;/g, "'")
-        .replace(/&nbsp;/g, " ")
-}
-
-const appIcons: Record<string, string> = {
-    "firefox": "󰈹",
-    "chromium": "󰊯",
-    "google-chrome": "󰊯",
-    "brave": "󰖟",
-    "telegram": "󰔁",
-    "whatsapp": "󰖣",
-    "discord": "󰙯",
-    "spotify": "󰓇",
-    "slack": "󰒱",
-    "thunderbird": "󰇮",
-    "steam": "󰓓",
-    "obs": "󰑋",
-    "vlc": "󰕼",
-    "nautilus": "󰉋",
-    "thunar": "󰉋",
-    "dolphin": "󰉋",
-    "terminal": "󰆍",
-    "kitty": "󰆍",
-    "alacritty": "󰆍",
-    "foot": "󰆍",
-    "code": "󰨞",
-    "vscode": "󰨞",
-    "notify-send": "󰂚",
-}
-
-function getAppIcon(n: any): string | null {
-    const appName = (n.get_app_name() || "").toLowerCase()
-
-    for (const [key, icon] of Object.entries(appIcons)) {
-        if (appName.includes(key)) return icon
-    }
-
-    return null
-}
-
-function hasFileIcon(n: any): boolean {
-    const appIcon = n.get_app_icon?.() || ""
-    const image = n.get_image?.() || ""
-    return (appIcon.startsWith("/") || image.startsWith("/"))
-}
-
-function getFileIcon(n: any): string {
-    const appIcon = n.get_app_icon?.() || ""
-    if (appIcon.startsWith("/")) return appIcon
-    return n.get_image?.() || ""
-}
-
-function getIconName(n: any): string | null {
-    const appIcon = n.get_app_icon?.() || ""
-    if (appIcon && !appIcon.startsWith("/")) {
-        const theme = Gtk.IconTheme.get_default()
-        if (theme.has_icon(appIcon)) return appIcon
-    }
-    return null
-}
-
-function cleanAppName(n: any): string {
-    const name = n.get_app_name() || ""
-    if (!name) return "Notificacao"
-    // Remove URLs from app names
-    return name.replace(/https?:\/\/\S+/g, "").trim() || "Notificacao"
-}
 
 function NotificationPopup({ notification: n, onDismiss }: { notification: any, onDismiss: () => void }) {
     const revealed = Variable(false)
@@ -95,9 +21,9 @@ function NotificationPopup({ notification: n, onDismiss }: { notification: any, 
         timeout(300, onDismiss)
     }
 
-    const nerdIcon = getAppIcon(n)
-    const iconName = getIconName(n)
-    const fileIcon = hasFileIcon(n) ? getFileIcon(n) : null
+    const nerdIcon = getNerdIcon(n)
+    const iconName = getThemeIconName(n)
+    const fileIcon = getFileIcon(n)
 
     return <revealer
         revealChild={revealed()}

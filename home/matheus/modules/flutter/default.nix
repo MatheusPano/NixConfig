@@ -48,9 +48,18 @@ in
     unzip
   ];
 
+  # O fvm cria o link ~/fvm/default -> versão global; assim `flutter` e
+  # `dart` ficam no PATH sem precisar de `fvm flutter ...`.
+  home.sessionPath = [ "$HOME/fvm/default/bin" ];
+
   home.sessionVariables = {
     ANDROID_HOME = androidSdkRoot;
     ANDROID_SDK_ROOT = androidSdkRoot;
+
+    # O avdmanager (cmdline-tools novo) grava os AVDs em
+    # ~/.config/.android/avd, mas o emulator procura em ~/.android/avd.
+    # Apontamos os dois para o mesmo lugar.
+    ANDROID_AVD_HOME = "$HOME/.config/.android/avd";
     JAVA_HOME = "${pkgs.jdk17}/lib/openjdk";
 
     # Faz o Gradle usar o aapt2 do SDK do Nix em vez de baixar um

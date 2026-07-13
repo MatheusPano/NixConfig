@@ -33,6 +33,9 @@ in
     slurp
     satty
     wl-clipboard
+    cliphist # histórico de clipboard (aba Clip da sidebar AGS)
+    hyprsunset # luz noturna (toggle na sidebar AGS)
+    wf-recorder # gravação de tela (botão na sidebar AGS)
 
     # AGS + bibliotecas Astal
     ags

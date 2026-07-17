@@ -18,11 +18,75 @@ $border-light: rgba(255, 255, 255, 0.12);
 $shadow: rgba(0, 0, 0, 0.5);
 $dark: rgba(17, 17, 27, 0.95);
 
+// ── Design tokens (painéis estilo Apple) ────────────────────
+// fc-match: a família instalada chama "Inter Variable", não "Inter"
+$font-ui: "Inter Variable", "Inter", sans-serif;
+$card: rgba(255, 255, 255, 0.05);
+$card-hover: rgba(255, 255, 255, 0.09);
+$card-active: rgba(255, 255, 255, 0.14);
+$separator: rgba(255, 255, 255, 0.06);
+
 // ── Reset ───────────────────────────────────────────────────
 * {
     all: unset;
     font-family: "JetBrainsMono Nerd Font", Roboto, Arial, sans-serif;
     font-size: 14px;
+}
+
+// Painéis e popups usam fonte de UI; a barra continua mono.
+// Seletor descendente porque o reset `*` seta a fonte em cada widget
+// (herança do container não vence).
+.cp-container *,
+.sidebar *,
+.clip-container *,
+.calendar-container *,
+.media-popup-content *,
+.wp-panel *,
+.notif-popup * {
+    font-family: $font-ui;
+}
+
+// Ícones nerd font: "Symbols Nerd Font" tem glifos de corpo quadrado
+// (avanço = tinta), então centralizam de verdade — na JetBrainsMono os
+// ícones são desenhados em células mono e ficam deslocados à esquerda.
+// `label.x` / `.x label` vence `.container *` por especificidade.
+label.qs-toggle-icon,
+label.sidebar-info-icon,
+label.sidebar-list-icon,
+label.sidebar-notif-nerd-icon,
+label.cp-tab-icon,
+label.cp-info-icon,
+label.cp-media-empty-icon,
+label.cp-mt-chip-icon,
+label.cp-mt-menu-check,
+label.cp-mt-art-fallback,
+label.cp-profile-icon,
+label.cp-slider-icon,
+label.cp-weather-icon,
+label.cp-wp-folder-icon,
+label.clip-empty-icon,
+label.clip-search-icon,
+label.clip-type-icon,
+label.swatch-dot-icon,
+label.media-empty-icon,
+label.media-source-icon,
+label.media-volume-icon,
+label.notif-popup-nerd-icon,
+.cal-nav-btn label,
+.clip-del label,
+.cp-ctrl-btn label,
+.cp-play-btn label,
+.cp-todo-add label,
+.cp-todo-check label,
+.cp-todo-del label,
+.power-btn label,
+.sidebar-notif-dismiss label,
+.sidebar-shot-btn label,
+.sidebar-slider-icon label,
+.sidebar-mini-toggle label,
+.media-ctrl-btn label,
+.media-play-btn label {
+    font-family: "Symbols Nerd Font";
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -499,7 +563,9 @@ window.QuickSettings {
 
 .sidebar {
     background: #000000;
-    min-width: 380px;
+    // largura fixa: sem isso a sidebar encolhe nas abas com conteúdo
+    // mais estreito que o da aba Notificações
+    min-width: 484px;
     padding: 16px 14px;
     border-radius: 0 0 0 20px;
     border: none;
@@ -582,9 +648,9 @@ window.QuickSettings {
 }
 
 .sidebar-section-title {
-    font-size: 11px;
-    font-weight: bold;
-    color: $muted;
+    font-size: 13px;
+    font-weight: 600;
+    color: $fg-mid;
     margin-bottom: 6px;
 }
 
@@ -740,9 +806,9 @@ window.QuickSettings {
 
 // ── Notifications ───────────────────────────────────────────
 .sidebar-clear-btn {
-    font-size: 11px;
+    font-size: 12px;
     color: $muted;
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: 8px;
     transition: 180ms ease;
 
@@ -759,10 +825,10 @@ window.QuickSettings {
 }
 
 .sidebar-notif {
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 8px;
-    padding: 8px 10px;
-    margin-bottom: 4px;
+    background: $card;
+    border-radius: 12px;
+    padding: 9px 11px;
+    margin-bottom: 5px;
 
     .sidebar-notif-title {
         font-size: 12px;
@@ -770,10 +836,11 @@ window.QuickSettings {
         color: $fg;
     }
 
+    // corpo com ênfase: é a mensagem em si (o domínio foi pra linha do app)
     .sidebar-notif-body {
-        font-size: 11px;
-        color: $muted;
-        margin-top: 2px;
+        font-size: 13px;
+        color: $fg-mid;
+        margin-top: 3px;
     }
 
     .sidebar-notif-dismiss {
@@ -1405,15 +1472,18 @@ window.CenterPanel {
 }
 
 .power-btn {
-    font-size: 18px;
-    color: $muted;
-    padding: 8px 16px;
-    border-radius: 10px;
-    margin: 0 3px;
+    font-size: 16px;
+    color: $fg-mid;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    margin: 0 6px;
+    background: $card;
     transition: 200ms ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: $card-hover;
         color: $fg;
     }
 
@@ -1731,11 +1801,11 @@ window.CenterPanel {
 }
 
 .cp-option-toggle {
-    font-size: 11px;
+    font-size: 13px;
     color: $fg-mid;
-    padding: 4px 12px;
+    padding: 6px 14px;
     margin-right: 6px;
-    border-radius: 8px;
+    border-radius: 10px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid transparent;
     transition: 180ms ease;
@@ -1762,12 +1832,14 @@ window.CenterPanel {
 
 // ── Sidebar: screenshots / gravação ─────────────────────────
 .sidebar-shot-btn {
-    font-size: 15px;
+    font-size: 14px;
     color: $fg-mid;
-    padding: 5px 9px;
-    margin-left: 4px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+    margin-left: 6px;
+    border-radius: 50%;
+    background: $card;
     transition: 180ms ease;
 
     &:hover {
@@ -1786,25 +1858,54 @@ window.CenterPanel {
     margin-bottom: 8px;
 }
 
+.sidebar-segmented {
+    margin: 4px 3px 10px;
+}
+
+// cards estilo Control Center: círculo de ícone colorido quando ativo
 .qs-toggle {
-    padding: 10px 6px;
-    margin: 2px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid transparent;
-    color: $muted;
+    padding: 8px 10px;
+    margin: 3px;
+    border-radius: 14px;
+    background: $card;
     transition: 200ms ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: $fg-mid;
+        background: $card-hover;
     }
+}
+
+.qs-toggle-circle {
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    margin-right: 10px;
+    transition: 250ms ease;
 
     &.active {
-        background: $accent-dim;
-        color: $accent;
-        border-color: rgba(122, 162, 247, 0.4);
+        background: $accent;
     }
+}
+
+.qs-toggle-icon {
+    font-size: 15px;
+    color: $fg-mid;
+
+    .qs-toggle-circle.active & {
+        color: #ffffff;
+    }
+}
+
+.qs-toggle-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: $fg;
+}
+
+.qs-toggle-status {
+    font-size: 11px;
+    color: $muted;
 }
 
 .qs-toggle-icon {
@@ -2344,10 +2445,123 @@ window.CenterPanel {
 
 // ── Aba Personalização ──────────────────────────────────────
 .cp-pers-section {
-    font-size: 11px;
-    font-weight: bold;
+    font-size: 13px;
+    font-weight: 600;
+    color: $fg-mid;
+    margin: 14px 6px 8px;
+}
+
+// ── Cards agrupados (estilo Ajustes do iOS) ─────────────────
+.cp-card {
+    background: $card;
+    border-radius: 14px;
+    padding: 4px 0;
+}
+
+.cp-card-row {
+    padding: 10px 16px;
+}
+
+.cp-card-sep {
+    background: $separator;
+    min-height: 1px;
+    margin-left: 16px;
+}
+
+.cp-row-label {
+    font-size: 14px;
+    color: $fg;
+}
+
+.cp-row-sub {
+    font-size: 12px;
     color: $muted;
-    margin: 10px 4px 6px;
+    margin-top: 1px;
+}
+
+// ── Segmented control ───────────────────────────────────────
+.segmented {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 9px;
+    padding: 2px;
+}
+
+.segment {
+    padding: 4px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    // peso fixo: mudar o weight no ativo reflui a largura do label
+    // e as abas "pulam" na troca
+    font-weight: 500;
+    color: $fg-mid;
+    transition: 120ms ease;
+
+    &:hover {
+        color: $fg;
+    }
+
+    &.active {
+        background: $card-active;
+        color: $fg;
+    }
+}
+
+// ── Swatch circular (opções de cor) ─────────────────────────
+.swatch-dot {
+    border-radius: 50%;
+    padding: 2px;
+    border: 2px solid transparent;
+    margin-left: 6px;
+    transition: 180ms ease;
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    &.active {
+        border-color: $fg;
+    }
+}
+
+.swatch-dot-fill {
+    min-width: 20px;
+    min-height: 20px;
+    border-radius: 50%;
+}
+
+.swatch-dot-icon {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+// ── Switch (GtkSwitch) ──────────────────────────────────────
+.cp-switch {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+    min-width: 46px;
+    min-height: 26px;
+    transition: 200ms ease;
+
+    slider {
+        background: #ffffff;
+        border-radius: 50%;
+        min-width: 22px;
+        min-height: 22px;
+        margin: 2px;
+    }
+
+    // ícones ON/OFF embutidos do GtkSwitch
+    image {
+        opacity: 0;
+        color: transparent;
+        -gtk-icon-transform: scale(0);
+        min-width: 0;
+        min-height: 0;
+    }
+
+    &:checked {
+        background: #30d158; // verde Apple
+    }
 }
 
 .cp-swatch {
@@ -2401,24 +2615,25 @@ window.ClipboardPopup {
     margin-bottom: 8px; // encosta na moldura inferior (FRAME_WIDTH)
 }
 
-.clip-header {
+// busca estilo Spotlight: pill com lupa
+.clip-search-wrap {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 9px 14px;
     margin-bottom: 10px;
 }
 
-.clip-title {
-    font-size: 16px;
-    color: $accent;
-    margin: 0 12px 0 4px;
+.clip-search-icon {
+    font-size: 14px;
+    color: $muted;
+    margin-right: 10px;
 }
 
 .clip-search {
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    padding: 6px 12px;
+    background: transparent;
     color: $fg;
-    font-size: 13px;
+    font-size: 14px;
     caret-color: $fg;
-    margin-right: 10px;
 }
 
 .clip-row {
@@ -2464,6 +2679,43 @@ window.ClipboardPopup {
     font-size: 12px;
 }
 
+// chip de tipo (texto/link/imagem) estilo resultado do Spotlight
+.clip-type {
+    min-width: 30px;
+    min-height: 30px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.07);
+    margin-right: 10px;
+}
+
+.clip-type-icon {
+    font-size: 14px;
+    color: $fg-mid;
+}
+
+// rodapé com dicas de teclado estilo Raycast
+.clip-hints {
+    margin-top: 8px;
+    padding: 8px 4px 0;
+    border-top: 1px solid $separator;
+}
+
+.clip-hint-key {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 10px;
+    color: $fg-mid;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    padding: 2px 7px;
+    margin-right: 5px;
+}
+
+.clip-hint-text {
+    font-size: 11px;
+    color: $muted;
+    margin-right: 14px;
+}
+
 .clip-del {
     color: $muted;
     font-size: 12px;
@@ -2491,4 +2743,18 @@ window.ClipboardPopup {
 .clip-empty-text {
     color: $muted;
     font-size: 13px;
+}
+
+// ação destrutiva: texto discreto, vermelho só no hover
+.clip-wipe {
+    font-size: 13px;
+    color: $muted;
+    padding: 6px 12px;
+    border-radius: 10px;
+    transition: 180ms ease;
+
+    &:hover {
+        color: $red;
+        background: rgba(247, 118, 142, 0.1);
+    }
 }

@@ -1,7 +1,7 @@
 import { App, Astal, Gtk, Gdk } from "astal/gtk3"
 import { Variable, GLib, timeout } from "astal"
 import Notifd from "gi://AstalNotifd"
-import { stripHtml } from "../lib/utils"
+import { stripHtml, splitNotifBody } from "../lib/utils"
 import { getNerdIcon, getFileIcon, getThemeIconName, cleanAppName } from "../lib/notifIcons"
 
 const TIMEOUT_MS = 5000
@@ -24,6 +24,7 @@ function NotificationPopup({ notification: n, onDismiss }: { notification: any, 
     const nerdIcon = getNerdIcon(n)
     const iconName = getThemeIconName(n)
     const fileIcon = getFileIcon(n)
+    const { origin, body } = splitNotifBody(stripHtml(n.get_body() || ""))
 
     return <revealer
         revealChild={revealed()}
@@ -51,7 +52,7 @@ function NotificationPopup({ notification: n, onDismiss }: { notification: any, 
                 <box vertical hexpand>
                     <box className="notif-popup-header">
                         <label className="notif-popup-appname"
-                            label={cleanAppName(n)}
+                            label={origin ?? cleanAppName(n)}
                             hexpand halign={Gtk.Align.START}
                             truncate maxWidthChars={30}
                         />
@@ -72,8 +73,8 @@ function NotificationPopup({ notification: n, onDismiss }: { notification: any, 
                         halign={Gtk.Align.START}
                         truncate maxWidthChars={36}
                     />
-                    {(n.get_body() || "").trim() !== "" && <label className="notif-popup-body"
-                        label={stripHtml(n.get_body())}
+                    {body !== "" && <label className="notif-popup-body"
+                        label={body}
                         halign={Gtk.Align.START}
                         wrap
                         maxWidthChars={40}

@@ -18,8 +18,18 @@ function queryCurrent(): string {
     } catch { return "" }
 }
 
+// Symlink lido pelo hyprlock para usar o mesmo wallpaper da área de trabalho
+const CURRENT_LINK = `${GLib.get_home_dir()}/.config/hypr/current-wallpaper`
+
+function updateCurrentLink(path: string) {
+    if (!path) return
+    execAsync(["ln", "-sf", path, CURRENT_LINK]).catch(() => {})
+}
+
 export const currentWp = Variable(queryCurrent())
 export const wallpaperList = Variable(queryWallpapers())
+
+updateCurrentLink(currentWp.get())
 
 export function refreshWallpapers() {
     wallpaperList.set(queryWallpapers())
@@ -35,6 +45,7 @@ export function setWallpaper(path: string) {
         "--transition-fps", "60",
     ]).catch(e => console.error("awww failed:", e))
     currentWp.set(path)
+    updateCurrentLink(path)
 }
 
 export function randomWallpaper() {

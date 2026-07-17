@@ -29,6 +29,8 @@
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
+    inter # fonte de UI dos paineis do AGS
+    nerd-fonts.symbols-only # icones com corpo quadrado (centralizam nos circulos)
   ];
 
   # So o essencial do sistema; apps de usuario ficam em

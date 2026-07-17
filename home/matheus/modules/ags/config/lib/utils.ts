@@ -20,6 +20,15 @@ export function stripHtml(text: string): string {
         .replace(/&nbsp;/g, " ")
 }
 
+// Notificações web (Chrome) vêm com o domínio na primeira linha do corpo
+// ("web.whatsapp.com\n\nVou dormir") — separa pra dar ênfase à mensagem
+export function splitNotifBody(raw: string): { origin: string | null; body: string } {
+    const lines = raw.split("\n").map(l => l.trim()).filter(Boolean)
+    if (lines.length > 1 && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(lines[0]))
+        return { origin: lines[0], body: lines.slice(1).join("\n") }
+    return { origin: null, body: lines.join("\n") }
+}
+
 export function timeAgo(unixSecs: number): string {
     const diff = Math.floor(Date.now() / 1000) - unixSecs
     if (diff < 60) return "agora"

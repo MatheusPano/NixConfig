@@ -5,13 +5,13 @@ import Network from "gi://AstalNetwork"
 import Bluetooth from "gi://AstalBluetooth"
 import Notifd from "gi://AstalNotifd"
 import PopupWindow from "../lib/PopupWindow"
-import { stripHtml, timeAgo, hasCommand } from "../lib/utils"
+import { stripHtml, splitNotifBody, timeAgo, hasCommand } from "../lib/utils"
 import { getNerdIcon, getFileIcon, getThemeIconName, cleanAppName } from "../lib/notifIcons"
 
 export const qsVisible = Variable(false)
 
-type TabId = "notif" | "wifi" | "bluetooth" | "sound" | "clip"
-const tabIds: TabId[] = ["notif", "wifi", "bluetooth", "sound", "clip"]
+type TabId = "notif" | "wifi" | "bluetooth" | "sound"
+const tabIds: TabId[] = ["notif", "wifi", "bluetooth", "sound"]
 const activeTab = Variable<TabId>("notif")
 
 function cycleTab(dir: 1 | -1) {
@@ -58,8 +58,8 @@ function toggleRecord() {
 function Header() {
     const getDate = () => {
         const now = GLib.DateTime.new_now_local()
-        const dias = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"]
-        const meses = ["janeiro", "fevereiro", "marco", "abril", "maio", "junho",
+        const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"]
+        const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
             "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
         const dow = dias[now.get_day_of_week() % 7]
         const day = now.get_day_of_month()
@@ -102,20 +102,32 @@ function Header() {
     </box>
 }
 
-// ── Toggles rápidos ─────────────────────────────────────────
+// ── Toggles rápidos (estilo Control Center) ─────────────────
 function QuickToggle({ icon, label, active, onToggle, visible }: {
     icon: any, label: string, active: any, onToggle: () => void, visible?: any
 }) {
     return <button
-        className={active.as ? active.as((a: boolean) => a ? "qs-toggle active" : "qs-toggle") : active}
+        className="qs-toggle"
         onClicked={onToggle}
         canFocus={false}
         visible={visible ?? true}
         hexpand
     >
-        <box vertical halign={Gtk.Align.CENTER}>
-            <label className="qs-toggle-icon" label={icon} />
-            <label className="qs-toggle-label" label={label} />
+        <box>
+            {/* hexpand no label: sem ele fica com largura natural encostado à
+                esquerda e o halign CENTER não age; hexpand={false} no box
+                trava a propagação pro card (senão empurra o texto) */}
+            <box className={active.as((a: boolean) => a ? "qs-toggle-circle active" : "qs-toggle-circle")}
+                hexpand={false} halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER}
+            >
+                <label className="qs-toggle-icon" label={icon} hexpand
+                    halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER} />
+            </box>
+            <box vertical valign={Gtk.Align.CENTER}>
+                <label className="qs-toggle-label" label={label} halign={Gtk.Align.START} />
+                <label className="qs-toggle-status" halign={Gtk.Align.START}
+                    label={active.as((a: boolean) => a ? "Ativado" : "Desativado")} />
+            </box>
         </box>
     </button>
 }
@@ -173,11 +185,18 @@ function QuickToggles() {
                 active={bind(bt, "isPowered")}
                 onToggle={() => execAsync(["bluetoothctl", "power", bt.get_is_powered() ? "off" : "on"]).catch(() => {})}
             />
+        </box>
+        <box homogeneous>
             <QuickToggle
                 icon="󰂛" label="Silêncio"
                 active={bind(notifd, "dontDisturb")}
                 onToggle={() => notifd.set_dont_disturb(!notifd.get_dont_disturb())}
             />
+            {hasNightLight && <QuickToggle
+                icon="󰖔" label="Luz noturna"
+                active={nightLightOn()}
+                onToggle={toggleNightLight}
+            />}
         </box>
         <box homogeneous>
             <QuickToggle
@@ -185,13 +204,8 @@ function QuickToggles() {
                 active={airplaneOn()}
                 onToggle={toggleAirplane}
             />
-            {hasNightLight && <QuickToggle
-                icon="󰖔" label="Luz noturna"
-                active={nightLightOn()}
-                onToggle={toggleNightLight}
-            />}
             <QuickToggle
-                icon="󰍭" label="Mudo (mic)"
+                icon="󰍭" label="Mudo do mic"
                 active={bind(mic, "mute")}
                 onToggle={() => mic.set_mute(!mic.get_mute())}
             />
@@ -199,26 +213,23 @@ function QuickToggles() {
     </box>
 }
 
-// ── Tab bar ─────────────────────────────────────────────────
+// ── Tab bar (segmented control) ─────────────────────────────
 function TabBar() {
-    const tabs: { id: TabId; icon: string; label: string }[] = [
-        { id: "notif", icon: "󰂚", label: "Notif." },
-        { id: "wifi", icon: "󰤨", label: "Wi-Fi" },
-        { id: "bluetooth", icon: "󰂯", label: "BT" },
-        { id: "sound", icon: "󰕾", label: "Som" },
-        { id: "clip", icon: "󰅍", label: "Clip" },
+    const tabs: { id: TabId; label: string }[] = [
+        { id: "notif", label: "Notificações" },
+        { id: "wifi", label: "Wi-Fi" },
+        { id: "bluetooth", label: "Bluetooth" },
+        { id: "sound", label: "Som" },
     ]
 
-    return <box className="sidebar-tabs" homogeneous>
+    return <box className="segmented sidebar-segmented" homogeneous>
         {tabs.map(tab =>
             <button
-                className={activeTab().as(a => a === tab.id ? "sidebar-tab active" : "sidebar-tab")}
+                className={activeTab().as(a => a === tab.id ? "segment active" : "segment")}
+                canFocus={false}
                 onClicked={() => activeTab.set(tab.id)}
             >
-                <box vertical halign={Gtk.Align.CENTER}>
-                    <label className="sidebar-tab-icon" label={tab.icon} />
-                    <label className="sidebar-tab-label" label={tab.label} />
-                </box>
+                <label label={tab.label} />
             </button>
         )}
     </box>
@@ -246,8 +257,9 @@ function NotificationTab() {
     const expandedId = Variable(-1)
 
     return <box className="sidebar-section" vertical>
+        {/* o segmented acima já diz "Notificações" — só a ação aqui */}
         <box className="sidebar-section-header">
-            <label className="sidebar-section-title" label="Notificacoes" hexpand halign={Gtk.Align.START} />
+            <box hexpand />
             <button className="sidebar-clear-btn"
                 onClicked={() => notifd.get_notifications().forEach((n: any) => n.dismiss())}
             >
@@ -256,7 +268,7 @@ function NotificationTab() {
         </box>
         {bind(notifd, "notifications").as(notifs => {
             if (notifs.length === 0)
-                return <label className="sidebar-empty" label="Sem notificacoes" />
+                return <label className="sidebar-empty" label="Sem notificações" />
 
             const sorted = [...notifs].sort((a: any, b: any) => (b.get_time?.() || 0) - (a.get_time?.() || 0))
 
@@ -264,6 +276,9 @@ function NotificationTab() {
                 {sorted.slice(0, 15).map((n: any) => {
                     const id = n.get_id?.() ?? 0
                     const actions = (n.get_actions?.() || []) as any[]
+                    // domínio vira a linha do app (mais útil que "Google Chrome")
+                    // e o corpo fica só com a mensagem
+                    const { origin, body } = splitNotifBody(stripHtml(n.get_body() || ""))
 
                     return <eventbox onClick={() => expandedId.set(expandedId.get() === id ? -1 : id)}>
                         <box className="sidebar-notif" vertical>
@@ -272,22 +287,24 @@ function NotificationTab() {
                                 <box vertical hexpand>
                                     <box>
                                         <label className="sidebar-notif-app"
-                                            label={cleanAppName(n)}
+                                            label={origin ?? cleanAppName(n)}
                                             halign={Gtk.Align.START} hexpand
-                                            truncate maxWidthChars={18}
+                                            truncate maxWidthChars={24}
                                         />
                                         <label className="sidebar-notif-time"
                                             label={n.get_time?.() ? timeAgo(n.get_time()) : ""}
                                         />
                                     </box>
                                     <label className="sidebar-notif-title"
-                                        label={stripHtml(n.get_summary() || "Notificacao")}
+                                        label={stripHtml(n.get_summary() || "Notificação")}
                                         truncate maxWidthChars={26} halign={Gtk.Align.START}
                                     />
+                                    {/* recolhida: quebras de linha viram " · " */}
                                     <label className="sidebar-notif-body"
-                                        label={stripHtml(n.get_body() || "")}
+                                        label={expandedId().as(e =>
+                                            e === id ? body : body.split("\n").join(" · "))}
                                         halign={Gtk.Align.START}
-                                        visible={(n.get_body() || "").trim() !== ""}
+                                        visible={body !== ""}
                                         truncate={expandedId().as(e => e !== id)}
                                         wrap={expandedId().as(e => e === id)}
                                         maxWidthChars={30}
@@ -365,7 +382,7 @@ function WifiTab() {
         </box>
 
         {bind(net, "wifi").as(wifi => {
-            if (!wifi) return <label className="sidebar-empty" label="Wi-Fi indisponivel" />
+            if (!wifi) return <label className="sidebar-empty" label="Wi-Fi indisponível" />
 
             return <box vertical>
                 <box className="sidebar-info-row">
@@ -378,7 +395,7 @@ function WifiTab() {
 
                 <box className="sidebar-separator" />
 
-                <label className="sidebar-subsection-title" label="Redes disponiveis" halign={Gtk.Align.START} />
+                <label className="sidebar-subsection-title" label="Redes disponíveis" halign={Gtk.Align.START} />
 
                 {bind(wifi, "accessPoints").as(aps => {
                     if (aps.length === 0) return <label className="sidebar-empty" label="Nenhuma rede encontrada" />
@@ -554,7 +571,7 @@ function BluetoothTab() {
                     }
 
                     if (others.length > 0) {
-                        items.push(<label className="sidebar-subsection-title" label="Disponiveis" halign={Gtk.Align.START} />)
+                        items.push(<label className="sidebar-subsection-title" label="Disponíveis" halign={Gtk.Align.START} />)
                         others.slice(0, 8).forEach((d: any) => items.push(
                             <button className="sidebar-list-item"
                                 onClicked={() => {
@@ -645,7 +662,7 @@ function SoundTab() {
         <label className="sidebar-section-title" label="Aplicativos" halign={Gtk.Align.START} />
         {bind(audio, "streams").as(streams => {
             if (!streams || streams.length === 0)
-                return <label className="sidebar-empty" label="Nenhum app tocando audio" />
+                return <label className="sidebar-empty" label="Nenhum app tocando áudio" />
 
             return <box vertical>
                 {streams.map((s: any) =>
@@ -678,7 +695,7 @@ function SoundTab() {
 
         <box className="sidebar-separator" />
 
-        <label className="sidebar-section-title" label="Saida de audio" halign={Gtk.Align.START} />
+        <label className="sidebar-section-title" label="Saída de áudio" halign={Gtk.Align.START} />
         {bind(audio, "speakers").as(speakers => {
             if (speakers.length === 0)
                 return <label className="sidebar-empty" label="Nenhuma saida encontrada" />
@@ -705,7 +722,7 @@ function SoundTab() {
 
         <box className="sidebar-separator" />
 
-        <label className="sidebar-section-title" label="Entrada de audio" halign={Gtk.Align.START} />
+        <label className="sidebar-section-title" label="Entrada de áudio" halign={Gtk.Align.START} />
         {bind(audio, "microphones").as(mics => {
             if (mics.length === 0)
                 return <label className="sidebar-empty" label="Nenhuma entrada encontrada" />
@@ -727,71 +744,6 @@ function SoundTab() {
                         </box>
                     </button>
                 })}
-            </box>
-        })}
-    </box>
-}
-
-// ── Clipboard tab (cliphist) ────────────────────────────────
-const hasCliphist = hasCommand("cliphist")
-const clipItems = Variable<{ id: string; preview: string }[]>([])
-const copiedId = Variable("")
-
-function refreshClip() {
-    if (!hasCliphist) return
-    execAsync(["bash", "-c", "cliphist list | head -40"])
-        .then(out => {
-            clipItems.set(out.split("\n").filter(Boolean).map(line => {
-                const tab = line.indexOf("\t")
-                return { id: line.slice(0, tab), preview: line.slice(tab + 1).trim() }
-            }))
-        })
-        .catch(() => clipItems.set([]))
-}
-qsVisible.subscribe(v => { if (v && hasCliphist) refreshClip() })
-
-function ClipTab() {
-    if (!hasCliphist)
-        return <box className="sidebar-section" vertical>
-            <label className="sidebar-section-title" label="Clipboard" halign={Gtk.Align.START} />
-            <label className="sidebar-empty" label="cliphist não instalado — rode o rebuild do NixOS para ativar o histórico" wrap />
-        </box>
-
-    return <box className="sidebar-section" vertical>
-        <box className="sidebar-section-header">
-            <label className="sidebar-section-title" label="Clipboard" hexpand halign={Gtk.Align.START} />
-            <button className="sidebar-action-btn" onClicked={refreshClip}>
-                <label label="Atualizar" />
-            </button>
-            <button className="sidebar-clear-btn"
-                onClicked={() => execAsync(["cliphist", "wipe"]).then(refreshClip).catch(() => {})}
-            >
-                <label label="Limpar" />
-            </button>
-        </box>
-        {clipItems().as(items => {
-            if (items.length === 0)
-                return <label className="sidebar-empty" label="Histórico vazio" />
-
-            return <box vertical>
-                {items.map(item =>
-                    <button className="sidebar-list-item"
-                        onClicked={() => {
-                            execAsync(["bash", "-c", `cliphist decode ${item.id} | wl-copy`])
-                                .then(() => {
-                                    copiedId.set(item.id)
-                                    setTimeout(() => copiedId.set(""), 1500)
-                                })
-                                .catch(() => {})
-                        }}
-                    >
-                        <box>
-                            <label className="sidebar-list-icon" label="󰅍" />
-                            <label className="sidebar-list-name" label={item.preview} hexpand halign={Gtk.Align.START} truncate maxWidthChars={30} />
-                            <label className="sidebar-list-status" label={copiedId().as(c => c === item.id ? "Copiado!" : "")} />
-                        </box>
-                    </button>
-                )}
             </box>
         })}
     </box>
@@ -844,7 +796,6 @@ function TabContent() {
         <box visible={activeTab().as(t => t === "wifi")}><WifiTab /></box>
         <box visible={activeTab().as(t => t === "bluetooth")}><BluetoothTab /></box>
         <box visible={activeTab().as(t => t === "sound")}><SoundTab /></box>
-        <box visible={activeTab().as(t => t === "clip")}><ClipTab /></box>
     </box>
 }
 
@@ -861,7 +812,7 @@ export default function QuickSettings(gdkmonitor: Gdk.Monitor) {
         onKey={(key: number) => {
             if (key === Gdk.KEY_Tab || key === Gdk.KEY_Right || key === Gdk.KEY_l) cycleTab(1)
             else if (key === Gdk.KEY_ISO_Left_Tab || key === Gdk.KEY_Left || key === Gdk.KEY_h) cycleTab(-1)
-            else if (key >= Gdk.KEY_1 && key <= Gdk.KEY_5) activeTab.set(tabIds[key - Gdk.KEY_1])
+            else if (key >= Gdk.KEY_1 && key <= Gdk.KEY_4) activeTab.set(tabIds[key - Gdk.KEY_1])
         }}
     >
         <box className="sidebar" vertical valign={Gtk.Align.FILL}>

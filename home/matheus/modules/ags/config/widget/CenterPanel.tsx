@@ -809,130 +809,137 @@ function cycleMinutesNext() {
     cycleMinutes.set(CYCLE_OPTIONS[(cur + 1) % CYCLE_OPTIONS.length])
 }
 
-function Swatch({ color, icon, label, active, onClick }: {
-    color: string, icon?: string, label: string, active: any, onClick: () => void
+// ── Controles estilo Apple ───────────────────────────────────
+function Segmented({ options, value, onSelect }: {
+    options: { id: string, label: string }[]
+    value: any // Binding<string>
+    onSelect: (id: string) => void
+}) {
+    return <box className="segmented" valign={Gtk.Align.CENTER}>
+        {options.map(o =>
+            <button
+                className={value.as((v: string) => v === o.id ? "segment active" : "segment")}
+                canFocus={false}
+                onClicked={() => onSelect(o.id)}
+            >
+                <label label={o.label} />
+            </button>
+        )}
+    </box>
+}
+
+function SwatchDot({ color, icon, tooltip, active, onClick }: {
+    color: string, icon?: string, tooltip: string, active: any, onClick: () => void
 }) {
     return <button
-        className={active.as((a: boolean) => a ? "cp-swatch active" : "cp-swatch")}
+        className={active.as((a: boolean) => a ? "swatch-dot active" : "swatch-dot")}
+        tooltipText={tooltip}
         canFocus={false}
+        valign={Gtk.Align.CENTER}
         onClicked={onClick}
     >
-        <box>
-            <box className="cp-swatch-circle" css={`background: ${color};`}
-                halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER}
-            >
-                {icon
-                    ? <label className="cp-swatch-icon" label={icon}
-                        halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER} />
-                    : <box />}
-            </box>
-            <label className="cp-swatch-label" label={label} />
+        <box className="swatch-dot-fill" css={`background: ${color};`}
+            halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER}
+        >
+            {icon
+                ? <label className="swatch-dot-icon" label={icon}
+                    halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER} />
+                : <box />}
         </box>
     </button>
 }
 
+function Toggle({ state }: { state: Variable<boolean> }) {
+    return <switch className="cp-switch" valign={Gtk.Align.CENTER} canFocus={false}
+        setup={(self: any) => {
+            self.active = state.get()
+            state.subscribe((v: boolean) => { if (self.active !== v) self.active = v })
+            self.connect("notify::active", () => {
+                if (self.active !== state.get()) state.set(self.active)
+            })
+        }}
+    />
+}
+
+// filho único chega como `child`, múltiplos como `children` (convenção do astal)
+function CardRow({ label, sub, child, children }: {
+    label: string, sub?: string, child?: any, children?: any
+}) {
+    return <box className="cp-card-row">
+        <box vertical hexpand halign={Gtk.Align.FILL} valign={Gtk.Align.CENTER}>
+            <label className="cp-row-label" label={label} halign={Gtk.Align.START} />
+            {sub ? <label className="cp-row-sub" label={sub} halign={Gtk.Align.START} /> : <box />}
+        </box>
+        {children ?? child}
+    </box>
+}
+
 function PersonalizacaoTab() {
     return <box className="cp-wp" vertical>
-        {/* ── Tema e cores ── */}
-        <label className="cp-pers-section" label="Tema" halign={Gtk.Align.START} />
-        <box>
-            <Swatch color="#000000" label="Escuro"
-                active={mainColor().as(m => m === "dark")}
-                onClick={() => mainColor.set("dark")}
-            />
-            <Swatch color={CREAM} label="Claro"
-                active={mainColor().as(m => m === "cream")}
-                onClick={() => mainColor.set("cream")}
-            />
+        {/* ── Aparência ── */}
+        <label className="cp-pers-section" label="Aparência" halign={Gtk.Align.START} />
+        <box className="cp-card" vertical>
+            <CardRow label="Tema">
+                <Segmented
+                    options={[{ id: "dark", label: "Escuro" }, { id: "cream", label: "Claro" }]}
+                    value={mainColor()}
+                    onSelect={m => mainColor.set(m as any)}
+                />
+            </CardRow>
+            <box className="cp-card-sep" />
+            <CardRow label="Barra do topo" sub="Contínua contorna a tela inteira">
+                <Segmented
+                    options={[{ id: "islands", label: "Ilhas" }, { id: "full", label: "Contínua" }]}
+                    value={barMode()}
+                    onSelect={m => barMode.set(m as any)}
+                />
+            </CardRow>
+            <box className="cp-card-sep" />
+            <CardRow label="Bordas das janelas" sub="Contorno na janela focada">
+                <Toggle state={bordersOn} />
+            </CardRow>
         </box>
 
-        <label className="cp-pers-section" label="Barra do topo" halign={Gtk.Align.START} />
-        <box>
-            <button
-                className={barMode().as(m => m === "islands" ? "cp-option-toggle active" : "cp-option-toggle")}
-                onClicked={() => barMode.set("islands")}
-                canFocus={false}
-                valign={Gtk.Align.CENTER}
-            >
-                <box>
-                    <label className="cp-wp-folder-icon" label="┄" />
-                    <label label="Ilhas separadas" />
-                </box>
-            </button>
-            <button
-                className={barMode().as(m => m === "full" ? "cp-option-toggle active" : "cp-option-toggle")}
-                onClicked={() => barMode.set("full")}
-                canFocus={false}
-                valign={Gtk.Align.CENTER}
-            >
-                <box>
-                    <label className="cp-wp-folder-icon" label="━" />
-                    <label label="Contínua — contorna a tela" />
-                </box>
-            </button>
-        </box>
-
-        <label className="cp-pers-section" label="Cor primária — workspace selecionado, destaques" halign={Gtk.Align.START} />
-        <box>
-            <Swatch color={DEFAULT_ACCENT} label="Padrão"
-                active={primaryMode().as(a => a === "default")}
-                onClick={() => primaryMode.set("default")}
-            />
-            <Swatch color="#2a2a3a" icon="󰸉" label="Wallpaper"
-                active={primaryMode().as(a => a === "wallpaper")}
-                onClick={() => primaryMode.set("wallpaper")}
-            />
-            <Swatch color={TERRA} label="Marrom"
-                active={primaryMode().as(a => a === "terra")}
-                onClick={() => primaryMode.set("terra")}
-            />
-            <box
-                className="cp-accent-chip"
-                valign={Gtk.Align.CENTER}
-                tooltipText="Cor primária atual"
-                css={primaryColor().as(c => `background: ${c};`)}
-            />
-        </box>
-
-        <label className="cp-pers-section" label="Cor secundária — workspaces com janelas abertas" halign={Gtk.Align.START} />
-        <box>
-            <Swatch color={DEFAULT_ACCENT} label="Padrão"
-                active={secondaryMode().as(a => a === "default")}
-                onClick={() => secondaryMode.set("default")}
-            />
-            <Swatch color="#2a2a3a" icon="󰸉" label="Wallpaper"
-                active={secondaryMode().as(a => a === "wallpaper")}
-                onClick={() => secondaryMode.set("wallpaper")}
-            />
-            <Swatch color={TERRA} label="Marrom"
-                active={secondaryMode().as(a => a === "terra")}
-                onClick={() => secondaryMode.set("terra")}
-            />
-            <box
-                className="cp-accent-chip"
-                valign={Gtk.Align.CENTER}
-                tooltipText="Cor secundária atual"
-                css={secondaryColor().as(c => `background: ${c};`)}
-            />
-        </box>
-
-        <label className="cp-pers-section" label="Bordas das janelas" halign={Gtk.Align.START} />
-        <box>
-            <Swatch color="#33ccff" label="Azul"
-                active={bordersOn()}
-                onClick={() => bordersOn.set(true)}
-            />
-            <button
-                className={bordersOn().as(b => b ? "cp-option-toggle active" : "cp-option-toggle")}
-                onClicked={() => bordersOn.set(!bordersOn.get())}
-                canFocus={false}
-                valign={Gtk.Align.CENTER}
-            >
-                <box>
-                    <label className="cp-wp-folder-icon" label={bordersOn().as(b => b ? "󰨓" : "󰹇")} />
-                    <label label={bordersOn().as(b => b ? "Bordas ativadas" : "Bordas desativadas")} />
-                </box>
-            </button>
+        {/* ── Cores ── */}
+        <label className="cp-pers-section" label="Cores" halign={Gtk.Align.START} />
+        <box className="cp-card" vertical>
+            <CardRow label="Cor primária" sub="Workspace selecionado e destaques">
+                <SwatchDot color={DEFAULT_ACCENT} tooltip="Padrão"
+                    active={primaryMode().as(a => a === "default")}
+                    onClick={() => primaryMode.set("default")}
+                />
+                <SwatchDot color="#2a2a3a" icon="󰸉" tooltip="Cores do wallpaper"
+                    active={primaryMode().as(a => a === "wallpaper")}
+                    onClick={() => primaryMode.set("wallpaper")}
+                />
+                <SwatchDot color={TERRA} tooltip="Marrom"
+                    active={primaryMode().as(a => a === "terra")}
+                    onClick={() => primaryMode.set("terra")}
+                />
+                <box className="cp-accent-chip" valign={Gtk.Align.CENTER}
+                    tooltipText="Cor primária atual"
+                    css={primaryColor().as(c => `background: ${c};`)}
+                />
+            </CardRow>
+            <box className="cp-card-sep" />
+            <CardRow label="Cor secundária" sub="Workspaces com janelas abertas">
+                <SwatchDot color={DEFAULT_ACCENT} tooltip="Padrão"
+                    active={secondaryMode().as(a => a === "default")}
+                    onClick={() => secondaryMode.set("default")}
+                />
+                <SwatchDot color="#2a2a3a" icon="󰸉" tooltip="Cores do wallpaper"
+                    active={secondaryMode().as(a => a === "wallpaper")}
+                    onClick={() => secondaryMode.set("wallpaper")}
+                />
+                <SwatchDot color={TERRA} tooltip="Marrom"
+                    active={secondaryMode().as(a => a === "terra")}
+                    onClick={() => secondaryMode.set("terra")}
+                />
+                <box className="cp-accent-chip" valign={Gtk.Align.CENTER}
+                    tooltipText="Cor secundária atual"
+                    css={secondaryColor().as(c => `background: ${c};`)}
+                />
+            </CardRow>
         </box>
 
         <box className="cp-separator" />

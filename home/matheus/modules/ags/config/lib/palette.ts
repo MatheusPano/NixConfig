@@ -257,8 +257,13 @@ const creamCss = `
 .sidebar-time { color: ${INK}; }
 .sidebar-shot-btn { background: ${CARD}; color: ${INK_MID}; }
 .sidebar-shot-btn:hover { background: ${CARD_HOVER}; color: ${INK}; }
-.qs-toggle { background: ${CARD}; color: ${INK_MUTED}; }
-.qs-toggle:hover { background: ${CARD_HOVER}; color: ${INK_MID}; }
+.qs-toggle { background: ${CARD}; }
+.qs-toggle:hover { background: ${CARD_HOVER}; }
+.qs-toggle-circle { background: rgba(69, 53, 39, 0.15); }
+.qs-toggle-icon { color: ${INK_MID}; }
+.qs-toggle-circle.active .qs-toggle-icon { color: #ffffff; }
+.qs-toggle-label { color: ${INK}; }
+.qs-toggle-status { color: ${INK_MUTED}; }
 .sidebar-tabs { background: rgba(90, 66, 48, 0.06); }
 .sidebar-tab { color: ${INK_MUTED}; }
 .sidebar-tab:hover { background: rgba(90, 66, 48, 0.08); color: ${INK_MID}; }
@@ -298,8 +303,27 @@ const creamCss = `
 .sidebar-wifi-entry { background: rgba(90, 66, 48, 0.1); color: ${INK}; caret-color: ${INK}; }
 .power-btn { color: ${INK_MUTED}; }
 .power-btn:hover { background: rgba(90, 66, 48, 0.12); color: ${INK}; }
+.cp-card { background: ${CARD}; }
+.cp-card-sep { background: rgba(69, 53, 39, 0.1); }
+.cp-row-label { color: ${INK}; }
+.cp-row-sub { color: ${INK_MUTED}; }
+.segmented { background: rgba(90, 66, 48, 0.1); }
+.segment { color: ${INK_MUTED}; }
+.segment:hover { color: ${INK}; }
+.segment.active { background: rgba(255, 255, 255, 0.92); color: ${INK}; }
+.swatch-dot:hover { border-color: rgba(69, 53, 39, 0.35); }
+.swatch-dot.active { border-color: ${INK}; }
+.cp-switch { background: rgba(69, 53, 39, 0.25); }
+.clip-wipe { color: ${INK_MUTED}; }
 .clip-container { background: ${CREAM}; }
-.clip-search { background: rgba(90, 66, 48, 0.1); color: ${INK}; caret-color: ${INK}; }
+.clip-search-wrap { background: rgba(90, 66, 48, 0.1); }
+.clip-search { background: transparent; color: ${INK}; caret-color: ${INK}; }
+.clip-search-icon { color: ${INK_MUTED}; }
+.clip-type { background: rgba(90, 66, 48, 0.12); }
+.clip-type-icon { color: ${INK_MID}; }
+.clip-hints { border-top-color: rgba(69, 53, 39, 0.12); }
+.clip-hint-key { background: rgba(90, 66, 48, 0.12); color: ${INK_MID}; }
+.clip-hint-text { color: ${INK_MUTED}; }
 .clip-item:hover { background: rgba(90, 66, 48, 0.08); }
 .clip-text { color: ${INK_MID}; }
 .clip-meta, .clip-empty-text { color: ${INK_MUTED}; }
@@ -350,7 +374,7 @@ function accentCss(hex: string): string {
     .cp-mt-menu-check { color: ${hex}; }
     .cp-mt-menu-item.active { background: ${a(0.15)}; }
     .cp-swatch.active { border-color: ${hex}; }
-    .qs-toggle.active { background: ${a(0.18)}; color: ${hex}; border-color: ${a(0.4)}; }
+    .qs-toggle-circle.active { background: ${hex}; }
     .sidebar-notif-action:hover { background: ${a(0.15)}; color: ${hex}; }
     .sidebar-wifi-connect { background: ${a(0.15)}; color: ${hex}; }
     .clip-item.selected { background: ${a(0.14)}; }

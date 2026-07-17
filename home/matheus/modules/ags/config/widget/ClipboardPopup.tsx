@@ -123,7 +123,14 @@ function wipeAll() {
 // tamanho da imagem extraído do preview ("[[ binary data 44 KiB png 937x555 ]]")
 function imageMeta(preview: string): string {
     const m = preview.match(/(\d+x\d+)/)
-    return m ? `imagem ${m[1]}` : "imagem"
+    return m ? `Imagem · ${m[1]}` : "Imagem"
+}
+
+// chip de tipo estilo Spotlight: link, imagem ou texto
+function rowIcon(e: ClipEntry): string {
+    if (e.isImage) return "󰋩"
+    if (/^https?:\/\//i.test(e.preview.trim())) return "󰌷"
+    return "󰉿"
 }
 
 function Row(e: ClipEntry, i: number) {
@@ -132,17 +139,21 @@ function Row(e: ClipEntry, i: number) {
             className={selected().as(s => s === i ? "clip-item selected" : "clip-item")}
             onClicked={() => copyEntry(e)}
         >
-            {e.isImage
-                ? <box>
-                    {e.thumb
-                        ? <box className="clip-thumb" valign={Gtk.Align.CENTER}
-                            css={`background-image: url("${e.thumb}");`} />
-                        : <label className="clip-meta" label="󰋩" />}
-                    <label className="clip-meta" label={imageMeta(e.preview)}
+            <box>
+                {e.isImage && e.thumb
+                    ? <box className="clip-thumb" valign={Gtk.Align.CENTER}
+                        css={`background-image: url("${e.thumb}");`} />
+                    : <box className="clip-type" hexpand={false} valign={Gtk.Align.CENTER}>
+                        <label className="clip-type-icon" label={rowIcon(e)} hexpand
+                            halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER} />
+                    </box>}
+                {e.isImage
+                    ? <label className="clip-meta" label={imageMeta(e.preview)}
                         valign={Gtk.Align.CENTER} />
-                </box>
-                : <label className="clip-text" label={e.preview.trim()}
-                    halign={Gtk.Align.START} truncate maxWidthChars={80} />}
+                    : <label className="clip-text" label={e.preview.trim()}
+                        valign={Gtk.Align.CENTER} halign={Gtk.Align.START}
+                        truncate maxWidthChars={72} />}
+            </box>
         </button>
         <button className="clip-del" canFocus={false} valign={Gtk.Align.CENTER}
             tooltipText="Remover do histórico"
@@ -201,22 +212,13 @@ export default function ClipboardPopup(gdkmonitor: Gdk.Monitor) {
         <box className="clip-container" vertical
             setup={(self: any) => self.set_size_request(680, 440)}
         >
-            <box className="clip-header">
-                <label className="clip-title" label="󰅍" />
+            <box className="clip-search-wrap">
+                <label className="clip-search-icon" label="󰍉" valign={Gtk.Align.CENTER} />
                 <entry className="clip-search" hexpand
                     placeholderText="Buscar no histórico…"
                     setup={(self: any) => { searchRef = self }}
                     onChanged={(self: any) => { query.set(self.text); selected.set(0) }}
                 />
-                <button className="cp-option-toggle" canFocus={false}
-                    valign={Gtk.Align.CENTER}
-                    onClicked={wipeAll}
-                >
-                    <box>
-                        <label className="cp-wp-folder-icon" label="󰩹" />
-                        <label label="Limpar" />
-                    </box>
-                </button>
             </box>
             <scrollable vexpand
                 vscroll={Gtk.PolicyType.AUTOMATIC}
@@ -238,6 +240,22 @@ export default function ClipboardPopup(gdkmonitor: Gdk.Monitor) {
                     })}
                 </box>
             </scrollable>
+            <box className="clip-hints">
+                <label className="clip-hint-key" label="↑↓" valign={Gtk.Align.CENTER} />
+                <label className="clip-hint-text" label="navegar" valign={Gtk.Align.CENTER} />
+                <label className="clip-hint-key" label="↵" valign={Gtk.Align.CENTER} />
+                <label className="clip-hint-text" label="colar" valign={Gtk.Align.CENTER} />
+                <label className="clip-hint-key" label="esc" valign={Gtk.Align.CENTER} />
+                <label className="clip-hint-text" label="fechar" valign={Gtk.Align.CENTER} />
+                <box hexpand />
+                <button className="clip-wipe" canFocus={false}
+                    valign={Gtk.Align.CENTER}
+                    tooltipText="Apagar todo o histórico"
+                    onClicked={wipeAll}
+                >
+                    <label label="Limpar histórico" />
+                </button>
+            </box>
         </box>
     </PopupWindow>
 }

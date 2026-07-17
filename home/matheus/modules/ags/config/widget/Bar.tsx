@@ -12,6 +12,7 @@ import { qsVisible } from "./QuickSettings"
 import RoundedAngleEnd from "./RoundedAngleEnd"
 import DynamicIsland from "./DynamicIsland"
 import { zenMode } from "../lib/zen"
+import { barHeight } from "../lib/palette"
 
 
 // ── Workspaces (dots) ──────────────────────────────────────
@@ -238,17 +239,17 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
                 <box className="pill pill-left" valign={Gtk.Align.FILL}>
                     <Workspaces />
                 </box>
-                <RoundedAngleEnd place="topright" />
+                <RoundedAngleEnd place="topright" fillOnFullBar />
             </box>
             <box halign={Gtk.Align.CENTER} valign={Gtk.Align.FILL}>
-                <RoundedAngleEnd place="topleft" />
+                <RoundedAngleEnd place="topleft" fillOnFullBar />
                 <box className="pill pill-center" valign={Gtk.Align.FILL}>
                     <DynamicIsland />
                 </box>
-                <RoundedAngleEnd place="topright" />
+                <RoundedAngleEnd place="topright" fillOnFullBar />
             </box>
             <box halign={Gtk.Align.END} valign={Gtk.Align.FILL}>
-                <RoundedAngleEnd place="topleft" />
+                <RoundedAngleEnd place="topleft" fillOnFullBar />
                 <box className="pill pill-right" valign={Gtk.Align.FILL}>
                     <NetworkIndicator />
                     <VolumeIndicator />
@@ -264,6 +265,11 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
 
     const filletLeft: any = BarFillet(gdkmonitor, "left", bar)
     const filletRight: any = BarFillet(gdkmonitor, "right", bar)
+
+    // Frame.tsx usa a altura pra ancorar a sombra interna no modo contínuo
+    const syncHeight = () => barHeight.set((bar as any).get_allocated_height())
+    ;(bar as any).connect("size-allocate", syncHeight)
+    syncHeight()
 
     // modo zen: só o revealer anima — a janela nunca é escondida.
     // Esconder/remapear a janela fazia o layer-shell registrar a zona

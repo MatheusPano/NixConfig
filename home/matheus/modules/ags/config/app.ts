@@ -7,6 +7,7 @@ import QuickSettings, { qsVisible } from "./widget/QuickSettings"
 import WallpaperPicker, { wpVisible } from "./widget/WallpaperPicker"
 import Frame from "./widget/Frame"
 import CenterPanel, { centerPanelVisible, cpActiveTab } from "./widget/CenterPanel"
+import ClipboardPopup, { clipVisible, initClipboard } from "./widget/ClipboardPopup"
 import NotificationPopups from "./widget/NotificationPopups"
 import { initTheme } from "./lib/palette"
 import { toggleZen, initZen } from "./lib/zen"
@@ -26,6 +27,9 @@ App.start({
         } else if (request === "wallpaper") {
             wpVisible.set(!wpVisible.get())
             res("ok")
+        } else if (request === "clipboard" || request === "clip") {
+            clipVisible.set(!clipVisible.get())
+            res("ok")
         } else if (request.startsWith("tab:")) {
             // abre o painel central direto numa aba: ags request tab:media
             const tab = request.slice(4) as any
@@ -43,6 +47,7 @@ App.start({
     main() {
         initTheme()
         initZen()
+        initClipboard()
         const monitors = App.get_monitors()
         // Frame primeiro: mesma camada da barra, criado antes = fica embaixo
         monitors.map(Frame)
@@ -50,6 +55,7 @@ App.start({
         monitors.map(CalendarPopup)
         monitors.map(MediaPopup)
         monitors.map(CenterPanel)
+        monitors.map(ClipboardPopup)
         monitors.map(QuickSettings)
         monitors.map(WallpaperPicker)
         monitors.map(NotificationPopups)

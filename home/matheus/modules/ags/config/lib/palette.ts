@@ -11,6 +11,8 @@ import { readState, writeState } from "./utils"
 // Cor secundária: workspaces ocupados e realces menores
 export type MainColor = "dark" | "cream"
 export type AccentMode = "default" | "wallpaper" | "terra"
+// Barra do topo: ilhas separadas (3 pills) ou contínua (funde com a moldura)
+export type BarMode = "islands" | "full"
 
 export const DEFAULT_ACCENT = "#7aa2f7"
 export const TERRA = "#8a4732"
@@ -25,8 +27,13 @@ export const primaryMode = Variable<AccentMode>(
     saved.primary ?? saved.accent ?? (legacy.enabled ? "wallpaper" : "default"))
 export const secondaryMode = Variable<AccentMode>(saved.secondary ?? "default")
 export const bordersOn = Variable<boolean>(saved.borders ?? true)
+export const barMode = Variable<BarMode>(saved.bar ?? "islands")
 export const primaryColor = Variable(DEFAULT_ACCENT)
 export const secondaryColor = Variable(DEFAULT_ACCENT)
+
+// altura alocada da barra — alimentada pelo Bar.tsx, lida pelo Frame.tsx
+// pra posicionar a sombra interna no modo contínuo
+export const barHeight = Variable(0)
 
 function persist() {
     writeState("theme", {
@@ -34,6 +41,7 @@ function persist() {
         primary: primaryMode.get(),
         secondary: secondaryMode.get(),
         borders: bordersOn.get(),
+        bar: barMode.get(),
     })
 }
 
@@ -290,6 +298,13 @@ const creamCss = `
 .sidebar-wifi-entry { background: rgba(90, 66, 48, 0.1); color: ${INK}; caret-color: ${INK}; }
 .power-btn { color: ${INK_MUTED}; }
 .power-btn:hover { background: rgba(90, 66, 48, 0.12); color: ${INK}; }
+.clip-container { background: ${CREAM}; }
+.clip-search { background: rgba(90, 66, 48, 0.1); color: ${INK}; caret-color: ${INK}; }
+.clip-item:hover { background: rgba(90, 66, 48, 0.08); }
+.clip-text { color: ${INK_MID}; }
+.clip-meta, .clip-empty-text { color: ${INK_MUTED}; }
+.clip-del { color: ${INK_MUTED}; }
+.clip-empty-icon { color: rgba(69, 53, 39, 0.2); }
 `
 
 // ── Override de accent ───────────────────────────────────────
@@ -338,7 +353,16 @@ function accentCss(hex: string): string {
     .qs-toggle.active { background: ${a(0.18)}; color: ${hex}; border-color: ${a(0.4)}; }
     .sidebar-notif-action:hover { background: ${a(0.15)}; color: ${hex}; }
     .sidebar-wifi-connect { background: ${a(0.15)}; color: ${hex}; }
+    .clip-item.selected { background: ${a(0.14)}; }
+    .clip-item.selected .clip-text { color: ${hex}; }
     `
+}
+
+// ── Barra contínua: preenche os vãos entre os pills ──────────
+// os RoundedAngleEnd/pills continuam desenhados, mas somem na cor sólida
+function barCss(): string {
+    const bg = mainColor.get() === "cream" ? CREAM : "#000000"
+    return `.bar-container { background: ${bg}; }`
 }
 
 // ── Bordas das janelas (Hyprland) ────────────────────────────
@@ -383,6 +407,8 @@ function syncTheme() {
     App.apply_css(style, true)
     if (mainColor.get() === "cream")
         App.apply_css(creamCss, false)
+    if (barMode.get() === "full")
+        App.apply_css(barCss(), false)
 
     const primary = resolveMode(primaryMode.get())
     const secondary = resolveMode(secondaryMode.get())
@@ -398,12 +424,14 @@ export function initTheme() {
     primaryMode.subscribe(() => { persist(); syncTheme() })
     secondaryMode.subscribe(() => { persist(); syncTheme() })
     bordersOn.subscribe(() => { persist(); applyBorders() })
+    barMode.subscribe(() => { persist(); syncTheme() })
     currentWp.subscribe(() => {
         if (primaryMode.get() === "wallpaper" || secondaryMode.get() === "wallpaper")
             syncTheme()
     })
     // reaplica o que estava salvo
-    if (mainColor.get() !== "dark" || primaryMode.get() !== "default" || secondaryMode.get() !== "default")
+    if (mainColor.get() !== "dark" || primaryMode.get() !== "default"
+        || secondaryMode.get() !== "default" || barMode.get() !== "islands")
         syncTheme()
     // o start.sh dá `hyprctl reload` ~1s após o AGS subir, o que desfaz
     // keywords; aplica as bordas depois disso

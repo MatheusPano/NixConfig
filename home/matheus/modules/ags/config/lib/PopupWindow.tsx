@@ -12,6 +12,9 @@ type Props = {
     contentCss?: string
     // handler extra de teclado (Escape já fecha por padrão)
     onKey?: (keyval: number) => void
+    // roda ANTES do desvio pra campos de texto — retorne true pra consumir
+    // a tecla mesmo com um Gtk.Entry focado (ex.: setas navegando uma lista)
+    onKeyOverride?: (keyval: number) => boolean
     child?: any
     children?: any
 }
@@ -28,6 +31,7 @@ export default function PopupWindow({
     transitionType = Gtk.RevealerTransitionType.SLIDE_DOWN,
     contentCss = "",
     onKey,
+    onKeyOverride,
     child,
     children,
 }: Props) {
@@ -74,6 +78,8 @@ export default function PopupWindow({
                 visible.set(false)
                 return true
             }
+            if (onKeyOverride?.(key))
+                return true
             // digitando em um campo de texto: deixa a tecla chegar nele
             const focus = self.get_focus?.()
             if (focus && focus instanceof Gtk.Entry)

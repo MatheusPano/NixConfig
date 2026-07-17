@@ -2381,3 +2381,110 @@ window.CenterPanel {
     color: $fg-mid;
     margin-left: 8px;
 }
+
+// ═══════════════════════════════════════════════════════════
+// CLIPBOARD — histórico (Super+V), sobe fundido com a moldura
+// ═══════════════════════════════════════════════════════════
+window.ClipboardPopup {
+    background: transparent;
+}
+
+.clip-container {
+    background: #000000;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.35);
+    padding: 14px 16px 10px;
+    margin-bottom: 8px; // encosta na moldura inferior (FRAME_WIDTH)
+}
+
+.clip-header {
+    margin-bottom: 10px;
+}
+
+.clip-title {
+    font-size: 16px;
+    color: $accent;
+    margin: 0 12px 0 4px;
+}
+
+.clip-search {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 6px 12px;
+    color: $fg;
+    font-size: 13px;
+    caret-color: $fg;
+    margin-right: 10px;
+}
+
+.clip-row {
+    margin: 1px 0;
+}
+
+.clip-item {
+    padding: 7px 10px;
+    border-radius: 10px;
+    transition: 150ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.07);
+    }
+
+    // seleção via teclado (setas + Enter)
+    &.selected {
+        background: $accent-dim;
+
+        .clip-text {
+            color: $accent;
+        }
+    }
+}
+
+.clip-text {
+    color: $fg-mid;
+    font-size: 13px;
+}
+
+.clip-thumb {
+    min-width: 110px;
+    min-height: 56px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid $border-light;
+    margin-right: 10px;
+}
+
+.clip-meta {
+    color: $muted;
+    font-size: 12px;
+}
+
+.clip-del {
+    color: $muted;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    margin-left: 4px;
+    transition: 150ms ease;
+
+    &:hover {
+        color: $red;
+        background: rgba(247, 118, 142, 0.12);
+    }
+}
+
+.clip-empty {
+    padding: 40px 0;
+}
+
+.clip-empty-icon {
+    font-size: 34px;
+    color: rgba(255, 255, 255, 0.12);
+    margin-bottom: 10px;
+}
+
+.clip-empty-text {
+    color: $muted;
+    font-size: 13px;
+}

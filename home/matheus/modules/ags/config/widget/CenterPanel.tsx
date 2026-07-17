@@ -11,7 +11,7 @@ import {
     cycleEnabled, cycleMinutes, CYCLE_OPTIONS,
 } from "../lib/wallpaper"
 import {
-    mainColor, primaryMode, secondaryMode, bordersOn,
+    mainColor, primaryMode, secondaryMode, bordersOn, barMode,
     primaryColor, secondaryColor,
     DEFAULT_ACCENT, TERRA, CREAM,
 } from "../lib/palette"
@@ -823,6 +823,32 @@ function PersonalizacaoTab() {
                 active={mainColor().as(m => m === "cream")}
                 onClick={() => mainColor.set("cream")}
             />
+        </box>
+
+        <label className="cp-pers-section" label="Barra do topo" halign={Gtk.Align.START} />
+        <box>
+            <button
+                className={barMode().as(m => m === "islands" ? "cp-option-toggle active" : "cp-option-toggle")}
+                onClicked={() => barMode.set("islands")}
+                canFocus={false}
+                valign={Gtk.Align.CENTER}
+            >
+                <box>
+                    <label className="cp-wp-folder-icon" label="┄" />
+                    <label label="Ilhas separadas" />
+                </box>
+            </button>
+            <button
+                className={barMode().as(m => m === "full" ? "cp-option-toggle active" : "cp-option-toggle")}
+                onClicked={() => barMode.set("full")}
+                canFocus={false}
+                valign={Gtk.Align.CENTER}
+            >
+                <box>
+                    <label className="cp-wp-folder-icon" label="━" />
+                    <label label="Contínua — contorna a tela" />
+                </box>
+            </button>
         </box>
 
         <label className="cp-pers-section" label="Cor primária — workspace selecionado, destaques" halign={Gtk.Align.START} />

@@ -1,5 +1,5 @@
 import { App, Astal, Gtk, Gdk } from "astal/gtk3"
-import { Variable, GLib, bind } from "astal"
+import { Variable, bind } from "astal"
 import Hyprland from "gi://AstalHyprland"
 import { batteryInfo } from "../lib/battery"
 import Wp from "gi://AstalWp"
@@ -7,7 +7,6 @@ import Network from "gi://AstalNetwork"
 import Bluetooth from "gi://AstalBluetooth"
 import Notifd from "gi://AstalNotifd"
 
-import { calendarVisible } from "./CalendarPopup"
 import { qsVisible } from "./QuickSettings"
 import RoundedAngleEnd from "./RoundedAngleEnd"
 import DynamicIsland from "./DynamicIsland"
@@ -35,25 +34,6 @@ function Workspaces() {
             </button>
         )}
     </box>
-}
-
-// ── Clock ──────────────────────────────────────────────────
-function Clock() {
-    const getTime = () => {
-        const now = GLib.DateTime.new_now_local()
-        const hour = String(now.get_hour()).padStart(2, "0")
-        const minute = String(now.get_minute()).padStart(2, "0")
-        return `${hour}:${minute}`
-    }
-
-    const time = Variable(getTime()).poll(60000, getTime)
-
-    return <button
-        className="clock"
-        onClicked={() => calendarVisible.set(!calendarVisible.get())}
-    >
-        <label label={time()} />
-    </button>
 }
 
 // ── Volume ─────────────────────────────────────────────────
@@ -255,7 +235,6 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
                     <VolumeIndicator />
                     <BluetoothIndicator />
                     <BatteryWidget />
-                    <Clock />
                     <NotifIndicator />
                 </box>
             </box>

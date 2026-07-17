@@ -1197,6 +1197,10 @@ window.CenterPanel {
         font-size: 13px;
         color: $muted;
     }
+
+    .cp-media-empty-actions {
+        margin-top: 16px;
+    }
 }
 
 .cp-player {

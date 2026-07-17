@@ -752,9 +752,30 @@ function MediaTab() {
     return <box className="cp-mediatab" vertical>
         {state().as(({ players, idx }) => {
             if (players.length === 0)
-                return <box vertical className="cp-media-empty" valign={Gtk.Align.CENTER} vexpand>
+                return <box vertical className="cp-media-empty"
+                    halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER} hexpand vexpand
+                >
                     <label className="cp-media-empty-icon" label="󰎊" />
-                    <label className="cp-media-empty-text" label="Nenhuma midia tocando" />
+                    <label className="cp-media-empty-text" label="Nenhuma mídia tocando" />
+                    <box halign={Gtk.Align.CENTER} className="cp-media-empty-actions">
+                        <button className="cp-option-toggle" canFocus={false}
+                            onClicked={() => execAsync(["hyprctl", "dispatch", "exec", "spotify"]).catch(() => {})}
+                        >
+                            <box>
+                                <label className="cp-wp-folder-icon" label="󰓇" />
+                                <label label="Spotify" />
+                            </box>
+                        </button>
+                        <button className="cp-option-toggle" canFocus={false}
+                            onClicked={() => execAsync(["hyprctl", "dispatch", "exec",
+                                "chromium --app=https://music.youtube.com"]).catch(() => {})}
+                        >
+                            <box>
+                                <label className="cp-wp-folder-icon" label="󰗃" />
+                                <label label="YouTube Music" />
+                            </box>
+                        </button>
+                    </box>
                 </box>
 
             return <MediaTabPlayer

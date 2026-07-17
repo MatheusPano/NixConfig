@@ -1,19 +1,19 @@
 import { Gtk } from "astal/gtk3"
 import { Variable, bind } from "astal"
 import Gio from "gi://Gio"
-import Hyprland from "gi://AstalHyprland"
+import GLib from "gi://GLib"
 import Wp from "gi://AstalWp"
 import Mpris from "gi://AstalMpris"
 import Notifd from "gi://AstalNotifd"
 import Bluetooth from "gi://AstalBluetooth"
-import { centerPanelVisible } from "./CenterPanel"
+import { calendarVisible } from "./CalendarPopup"
 import { mediaVisible } from "./MediaPopup"
 import { readFile, stripHtml } from "../lib/utils"
 import { getNerdIcon } from "../lib/notifIcons"
 
 // ── Estado da ilha ───────────────────────────────────────────
 // Um evento por vez; o mais novo substitui o anterior e o timer
-// devolve a ilha pro estado ocioso (título da janela).
+// devolve a ilha pro estado ocioso (data e hora por extenso).
 type IslandEvent = {
     kind: "volume" | "mic" | "brightness" | "media" | "notif" | "bt"
     icon: string
@@ -160,43 +160,38 @@ watchMedia()
 watchNotifications()
 watchBluetooth()
 
-// ── Título da janela (estado ocioso) ─────────────────────────
-function windowTitle(): Variable<string> {
-    const hypr = Hyprland.get_default()
-    const label = Variable("Desktop")
+// ── Data e hora por extenso (estado ocioso) ──────────────────
+// nomes fixos em pt-BR: independe do locale da sessão e evita o
+// "terça-feira" comprido do %A
+const WEEKDAYS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
+const MONTHS = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+]
 
-    const update = () => {
-        const client = hypr.get_focused_client()
-        if (client) {
-            const title = client.get_title()
-            if (title && title.length > 0) {
-                label.set(title.length > 40 ? title.substring(0, 40) + "..." : title)
-            } else {
-                label.set(client.get_class() || "Desktop")
-            }
-        } else {
-            label.set("Desktop")
-        }
-    }
-
-    hypr.connect("notify::focused-client", update)
-    update()
-    return label
+function formatIdle(): string {
+    const now = GLib.DateTime.new_now_local()
+    const weekday = WEEKDAYS[now.get_day_of_week() - 1] // ISO: 1 = segunda
+    const month = MONTHS[now.get_month() - 1]
+    const hh = String(now.get_hour()).padStart(2, "0")
+    const mm = String(now.get_minute()).padStart(2, "0")
+    return `${weekday}, ${now.get_day_of_month()} de ${month} - ${hh}:${mm}`
 }
 
 // ── Widget ───────────────────────────────────────────────────
 export default function DynamicIsland() {
-    const title = windowTitle()
+    const idleClock = Variable(formatIdle()).poll(10000, formatIdle)
 
     return <button
         className="island"
         canFocus={false}
         onClicked={() => {
-            // clicou durante um evento de mídia → abre o player
+            // clicou durante um evento de mídia → abre o player;
+            // ociosa a ilha é o relógio, então abre o calendário
             if (island.get()?.kind === "media")
                 mediaVisible.set(!mediaVisible.get())
             else
-                centerPanelVisible.set(!centerPanelVisible.get())
+                calendarVisible.set(!calendarVisible.get())
         }}
     >
         <stack
@@ -209,7 +204,7 @@ export default function DynamicIsland() {
             }}
         >
             <box name="idle">
-                <label label={title()} truncate maxWidthChars={45} />
+                <label label={idleClock()} truncate maxWidthChars={45} />
             </box>
             <box name="event" className={island().as(e => `island-event island-${e?.kind || "none"}`)}>
                 <label className="island-icon" label={island().as(e => e?.icon || "")} />

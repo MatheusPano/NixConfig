@@ -23,12 +23,8 @@ in
 
     # Desktop (Hyprland)
     vicinae
-    rofi
-    waybar # mantido como backup do ags
     awww
-    swaynotificationcenter
     libnotify
-    networkmanagerapplet
     grim
     slurp
     satty
@@ -49,6 +45,7 @@ in
     astal.battery
     astal.mpris
     astal.notifd
+    astal.tray
 
     # Utilitarios
     pavucontrol

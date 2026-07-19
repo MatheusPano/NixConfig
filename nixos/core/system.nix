@@ -44,6 +44,10 @@
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";
     MOZ_ENABLE_WAYLAND = "1";
+    # GTK4 com renderer OpenGL: o renderer Vulkan (padrao) enumera as GPUs ao
+    # abrir e acorda a RTX 4050 do D3cold via nouveau, custando segundos por app.
+    # A dGPU segue disponivel para jogos (DRI_PRIME=1 / Vulkan direto).
+    GSK_RENDERER = "ngl";
   };
 
   system.stateVersion = "25.11";

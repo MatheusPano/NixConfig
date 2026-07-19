@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 
 {
   wayland.windowManager.hyprland = {
@@ -14,5 +14,10 @@
   xdg.configFile = {
     "hypr/hyprland.conf".source = ./hyprland.conf;
     "hypr/hyprpaper.conf".source = ./hyprpaper.conf;
+    "hypr/hyprlock.conf".source = ./hyprlock.conf;
+    # Symlink gravavel (fora da store): o WallpaperPicker do AGS monitora e
+    # grava nessa pasta em runtime, entao ela nao pode ser read-only.
+    "hypr/wallpapers".source =
+      config.lib.file.mkOutOfStoreSymlink "/home/matheus/nixos-config/home/matheus/modules/hyprland/wallpapers";
   };
 }

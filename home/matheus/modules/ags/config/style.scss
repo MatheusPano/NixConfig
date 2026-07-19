@@ -58,8 +58,10 @@ label.cp-tab-icon,
 label.cp-info-icon,
 label.cp-media-empty-icon,
 label.cp-mt-chip-icon,
+label.cp-mt-chip-swap,
 label.cp-mt-menu-check,
 label.cp-mt-art-fallback,
+.cp-mt-mini label,
 label.cp-profile-icon,
 label.cp-slider-icon,
 label.cp-weather-icon,
@@ -237,6 +239,16 @@ window.BarFillet {
 
 .battery {
     color: $green;
+
+    &.low { color: $yellow; }
+    &.critical { color: $red; }
+    &.charging { color: $green; }
+
+    .bat-percent {
+        font-size: 11px;
+        font-weight: bold;
+        margin-left: 4px;
+    }
 }
 
 .bt-indicator {
@@ -246,6 +258,44 @@ window.BarFillet {
 
 .net-indicator {
     &.disconnected { color: $red; }
+}
+
+.volume.muted {
+    color: $muted;
+}
+
+// ── System tray ────────────────────────────────────────────
+.tray-arrow {
+    padding: 2px 4px 2px 8px;
+    margin: 0 1px;
+    color: $muted;
+    font-size: 14px;
+    border-radius: 10px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+        color: $fg;
+    }
+}
+
+.tray-items {
+    padding: 0 2px;
+}
+
+.tray-item {
+    padding: 2px 5px;
+    margin: 0 1px;
+    border-radius: 10px;
+    transition: 180ms ease;
+
+    &:hover {
+        background: $accent-dim;
+    }
+
+    image {
+        font-size: 16px;
+    }
 }
 
 .notif-indicator {
@@ -2197,21 +2247,23 @@ window.CenterPanel {
 }
 
 // ── Center panel: aba Mídia ─────────────────────────────────
+// Bloco único centralizado no painel: capa à esquerda com sombra,
+// coluna de info à direita alinhada à esquerda (estilo Now Playing).
 .cp-mediatab {
-    min-height: 300px;
+    min-height: 420px;
 }
 
 .cp-mt {
-    padding: 16px 8px;
+    padding: 24px;
 }
 
 .cp-mt-art {
-    min-width: 200px;
-    min-height: 200px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.05);
-    margin-right: 24px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    margin-right: 36px;
+    box-shadow:
+        0 20px 44px rgba(0, 0, 0, 0.55),
+        0 3px 10px rgba(0, 0, 0, 0.35);
 }
 
 .cp-mt-art-fallback {
@@ -2219,21 +2271,15 @@ window.CenterPanel {
     color: rgba(255, 255, 255, 0.12);
 }
 
-.cp-mt-info {
-    padding: 0 4px;
+.cp-mt-toprow {
+    margin-bottom: 16px;
 }
 
 .cp-mt-title {
-    font-size: 19px;
-    font-weight: bold;
+    font-size: 21px;
+    font-weight: 700;
     color: $fg;
-    margin-bottom: 2px;
-}
-
-.cp-mt-album {
-    font-size: 12px;
-    color: $muted;
-    margin-bottom: 1px;
+    margin-bottom: 3px;
 }
 
 .cp-mt-artist {
@@ -2241,46 +2287,119 @@ window.CenterPanel {
     color: $fg-mid;
 }
 
-.cp-mt-controls {
-    padding: 12px 0 6px;
+.cp-mt-album {
+    font-size: 11px;
+    color: $muted;
+    margin-top: 2px;
 }
 
 .cp-mt-progress {
-    padding: 2px 8px 8px;
+    margin-top: 20px;
 
     .cp-time-label {
         font-size: 10px;
         color: $muted;
-        margin-top: 4px;
+        margin-top: 6px;
+    }
+
+    // barra fina, cursor só aparece no hover (estilo Apple Music)
+    .cp-progress-bar {
+        trough {
+            min-height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.10);
+
+            highlight {
+                min-height: 4px;
+                border-radius: 2px;
+                background: rgba(255, 255, 255, 0.75);
+            }
+        }
+
+        slider {
+            min-width: 10px;
+            min-height: 10px;
+            margin: -3px 0;
+            opacity: 0;
+            transition: opacity 150ms ease;
+        }
+
+        &:hover slider {
+            opacity: 1;
+        }
     }
 }
 
+// transporte monocromático, sem círculo de destaque
+.cp-mt-controls {
+    margin-top: 10px;
+
+    .cp-ctrl-btn {
+        color: $fg;
+        padding: 6px 16px;
+        border-radius: 12px;
+        background: transparent;
+        transition: 150ms ease;
+
+        // o reset `*` fixa font-size no label, então o tamanho
+        // precisa ser declarado no próprio label
+        label {
+            font-size: 23px;
+        }
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        &:disabled {
+            color: rgba(255, 255, 255, 0.22);
+        }
+    }
+
+    .cp-play-btn {
+        color: $fg;
+        background: transparent;
+        padding: 0 22px;
+        margin: 0 6px;
+
+        label {
+            font-size: 38px;
+        }
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+    }
+}
+
+// chip discreto com a origem ("Mozilla zen", "Spotify"…)
 .cp-mt-chip {
-    padding: 4px 14px;
-    border-radius: 10px;
+    padding: 3px 12px;
+    border-radius: 999px;
     background: rgba(255, 255, 255, 0.06);
     transition: 180ms ease;
 
     &:hover {
-        background: $accent-dim;
+        background: rgba(255, 255, 255, 0.11);
     }
 }
 
 .cp-mt-chip-icon {
-    font-size: 14px;
-    color: $accent;
-    margin-right: 8px;
+    font-size: 12px;
+    color: $fg-mid;
+    margin-right: 7px;
 }
 
 .cp-mt-chip-name {
-    font-size: 12px;
-    color: $fg;
+    font-size: 11px;
+    font-weight: 600;
+    color: $fg-mid;
 }
 
 .cp-mt-chip-swap {
-    font-size: 12px;
+    font-size: 10px;
     color: $muted;
-    margin-left: 8px;
+    margin-left: 7px;
 }
 
 .cp-mt-volume {
@@ -2324,22 +2443,22 @@ window.CenterPanel {
     margin-top: 8px;
 }
 
-// ── Aba Mídia: chip row + menu + atalhos ────────────────────
-.cp-mt-chiprow {
-    padding: 2px 0;
-}
-
+// ── Aba Mídia: atalhos + menu de players ────────────────────
+// atalhos fantasma no canto superior direito da coluna de info
 .cp-mt-mini {
-    font-size: 14px;
     color: $muted;
-    padding: 4px 10px;
-    margin: 0 4px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.04);
-    transition: 180ms ease;
+    padding: 3px 8px;
+    margin-left: 4px;
+    border-radius: 8px;
+    background: transparent;
+    transition: 150ms ease;
+
+    label {
+        font-size: 13px;
+    }
 
     &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
         color: $fg;
     }
 }

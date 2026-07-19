@@ -5,8 +5,9 @@ export const WALLPAPER_DIR = "/home/matheus/.config/hypr/wallpapers"
 
 function queryWallpapers(): string[] {
     try {
+        // -L segue symlinks (a pasta e um link para o repo nixos-config)
         const out = exec(["bash", "-c",
-            `find "${WALLPAPER_DIR}" -maxdepth 1 -type f \\( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.webp" \\) | sort`
+            `find -L "${WALLPAPER_DIR}" -maxdepth 1 -type f \\( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.webp" \\) | sort`
         ])
         return out.split("\n").filter(Boolean)
     } catch { return [] }

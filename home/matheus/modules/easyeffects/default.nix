@@ -5,6 +5,9 @@ let
   speakerSink = "alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Speaker__sink";
   headphonesSink = "alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Headphones__sink";
 
+  # QCY MeloBuds Pro (84:AC:60:26:39:96)
+  btSink = "bluez_output.84_AC_60_26_39_96.1";
+
   eqBand = frequency: gain: q: {
     inherit frequency gain q;
     mode = "RLC (BT)";
@@ -99,6 +102,20 @@ in
       device = headphonesSink;
       device-description = "Headphones";
       device-profile = "[Out] Headphones";
+      preset-name = "Flat";
+    };
+    # Modo música (A2DP)
+    "easyeffects/autoload/output/${btSink}:a2dp-sink.json".text = builtins.toJSON {
+      device = btSink;
+      device-description = "QCY MeloBuds Pro";
+      device-profile = "a2dp-sink";
+      preset-name = "Flat";
+    };
+    # Modo headset (quando o microfone do fone está em uso)
+    "easyeffects/autoload/output/${btSink}:headset-head-unit.json".text = builtins.toJSON {
+      device = btSink;
+      device-description = "QCY MeloBuds Pro";
+      device-profile = "headset-head-unit";
       preset-name = "Flat";
     };
   };

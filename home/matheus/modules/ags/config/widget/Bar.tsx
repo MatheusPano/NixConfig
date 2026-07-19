@@ -6,6 +6,7 @@ import Wp from "gi://AstalWp"
 import Network from "gi://AstalNetwork"
 import Bluetooth from "gi://AstalBluetooth"
 import Notifd from "gi://AstalNotifd"
+import Tray from "gi://AstalTray"
 
 import { qsVisible } from "./QuickSettings"
 import RoundedAngleEnd from "./RoundedAngleEnd"
@@ -40,36 +41,51 @@ function Workspaces() {
 function VolumeIndicator() {
     const speaker = Wp.get_default()?.audio.defaultSpeaker!
 
+    // deriva de volume E mute — só de volume não atualizava ao mutar
+    const state = Variable.derive(
+        [bind(speaker, "volume"), bind(speaker, "mute")],
+        (vol, muted) => {
+            const icon = muted ? "󰖁"
+                : vol > 0.66 ? "󰕾"
+                : vol > 0.33 ? "󰖀"
+                : "󰕿"
+            const tip = muted ? "Mudo" : `Volume: ${Math.round(vol * 100)}%`
+            return { icon, tip, muted }
+        }
+    )
+
     return <button
-        className="volume"
+        className={state().as(s => s.muted ? "volume muted" : "volume")}
+        tooltipText={state().as(s => s.tip)}
         onClicked={() => qsVisible.set(!qsVisible.get())}
     >
-        <label label={bind(speaker, "volume").as(vol => {
-            const muted = speaker.get_mute()
-            if (muted) return "󰖁"
-            if (vol > 0.66) return "󰕾"
-            if (vol > 0.33) return "󰖀"
-            return "󰕿"
-        })} />
+        <label label={state().as(s => s.icon)} />
     </button>
 }
 
 // ── Battery (UPower quando disponível, senão sysfs) ────────
+const BAT_ICONS = ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+const BAT_ICONS_CHARGING = ["󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"]
+
 function BatteryWidget() {
     const getBatIcon = (percent: number, charging: boolean) => {
-        if (charging) return "󰂄"
-        if (percent >= 90) return "󰁹"
-        if (percent >= 70) return "󰂀"
-        if (percent >= 50) return "󰁾"
-        if (percent >= 30) return "󰁼"
-        if (percent >= 10) return "󰁺"
-        return "󰂃"
+        const i = Math.min(9, Math.max(0, Math.floor(percent / 10)))
+        return charging ? BAT_ICONS_CHARGING[i] : BAT_ICONS[i]
     }
 
-    return <box className="battery" visible={batteryInfo().as(i => i.present)}
-        tooltipText={batteryInfo().as(i => `Bateria: ${i.percent}%`)}
+    return <box
+        className={batteryInfo().as(i => {
+            if (i.charging) return "battery charging"
+            if (i.percent <= 15) return "battery critical"
+            if (i.percent <= 30) return "battery low"
+            return "battery"
+        })}
+        visible={batteryInfo().as(i => i.present)}
+        tooltipText={batteryInfo().as(i =>
+            i.charging ? `Carregando: ${i.percent}%` : `Bateria: ${i.percent}%`)}
     >
-        <label label={batteryInfo().as(i => getBatIcon(i.percent, i.charging))} />
+        <label className="bat-icon" label={batteryInfo().as(i => getBatIcon(i.percent, i.charging))} />
+        <label className="bat-percent" label={batteryInfo().as(i => `${i.percent}%`)} />
     </box>
 }
 
@@ -77,41 +93,107 @@ function BatteryWidget() {
 function BluetoothIndicator() {
     const bt = Bluetooth.get_default()
 
+    // isConnected notifica quando qualquer device conecta/desconecta —
+    // só isPowered não atualizava o estado "connected"
+    const state = Variable.derive(
+        [bind(bt, "isPowered"), bind(bt, "isConnected")],
+        (powered, connected) => {
+            if (!powered)
+                return { icon: "󰂲", cls: "bt-indicator disabled", tip: "Bluetooth desligado" }
+            if (connected) {
+                const names = bt.get_devices()
+                    .filter((d: any) => d.get_connected())
+                    .map((d: any) => d.get_name())
+                    .join(", ")
+                return { icon: "󰂱", cls: "bt-indicator connected", tip: names || "Conectado" }
+            }
+            return { icon: "󰂯", cls: "bt-indicator", tip: "Bluetooth ligado" }
+        }
+    )
+
     return <button
-        className={bind(bt, "isPowered").as(powered => {
-            if (!powered) return "bt-indicator disabled"
-            const connected = bt.get_devices().filter((d: any) => d.get_connected())
-            return connected.length > 0 ? "bt-indicator connected" : "bt-indicator"
-        })}
+        className={state().as(s => s.cls)}
+        tooltipText={state().as(s => s.tip)}
         onClicked={() => qsVisible.set(!qsVisible.get())}
     >
-        <label label={bind(bt, "isPowered").as(powered => {
-            if (!powered) return "󰂲"
-            return "󰂯"
-        })} />
+        <label label={state().as(s => s.icon)} />
     </button>
 }
 
 // ── Network ────────────────────────────────────────────────
 function NetworkIndicator() {
     const net = Network.get_default()
+    const wifi = net.get_wifi()
+
+    // mesma escala de ícones do QuickSettings
+    const wifiIcon = (strength: number) =>
+        strength > 75 ? "󰤨" : strength > 50 ? "󰤥" : strength > 25 ? "󰤢" : "󰤟"
+
+    const deps: any[] = [bind(net, "primary")]
+    if (wifi) {
+        deps.push(bind(wifi, "strength"))
+        deps.push(bind(wifi, "internet"))
+        deps.push(bind(wifi, "ssid"))
+    }
+
+    const state = Variable.derive(deps, () => {
+        if (net.get_primary() === Network.Primary.WIRED)
+            return { icon: "󰈀", cls: "net-indicator", tip: "Ethernet" }
+        if (wifi && wifi.get_internet() === Network.Internet.CONNECTED) {
+            const strength = wifi.get_strength()
+            return {
+                icon: wifiIcon(strength),
+                cls: "net-indicator",
+                tip: `${wifi.get_ssid() || "Wi-Fi"} (${strength}%)`,
+            }
+        }
+        return { icon: "󰤭", cls: "net-indicator disconnected", tip: "Desconectado" }
+    })
 
     return <button
-        className={bind(net, "primary").as(() => {
-            const wifi = net.get_wifi()
-            if (wifi && wifi.get_internet() === Network.Internet.CONNECTED)
-                return "net-indicator"
-            return "net-indicator disconnected"
-        })}
+        className={state().as(s => s.cls)}
+        tooltipText={state().as(s => s.tip)}
         onClicked={() => qsVisible.set(!qsVisible.get())}
     >
-        <label label={bind(net, "primary").as(() => {
-            const wifi = net.get_wifi()
-            if (wifi && wifi.get_internet() === Network.Internet.CONNECTED)
-                return "󰤨"
-            return "󰤭"
-        })} />
+        <label label={state().as(s => s.icon)} />
     </button>
+}
+
+// ── System tray (recolhido atrás da setinha) ───────────────
+export const trayRevealed = Variable(false)
+
+function SysTray() {
+    const tray = Tray.get_default()
+    const revealed = trayRevealed
+
+    return <box className="systray">
+        <button
+            className="tray-arrow"
+            tooltipText="System tray"
+            onClicked={() => revealed.set(!revealed.get())}
+        >
+            <label label={revealed().as(r => r ? "󰅂" : "󰅁")} />
+        </button>
+        <revealer
+            revealChild={revealed()}
+            transitionType={Gtk.RevealerTransitionType.SLIDE_RIGHT}
+            transitionDuration={200}
+        >
+            <box className="tray-items">
+                {bind(tray, "items").as(items => items.map(item =>
+                    <menubutton
+                        className="tray-item"
+                        usePopover={false}
+                        tooltipMarkup={bind(item, "tooltipMarkup")}
+                        actionGroup={bind(item, "actionGroup").as(ag => ["dbusmenu", ag])}
+                        menuModel={bind(item, "menuModel")}
+                    >
+                        <icon gicon={bind(item, "gicon")} />
+                    </menubutton>
+                ))}
+            </box>
+        </revealer>
+    </box>
 }
 
 // ── Notification indicator ─────────────────────────────────
@@ -175,7 +257,7 @@ function BarFillet(gdkmonitor: Gdk.Monitor, side: "left" | "right", bar: any) {
         gdkmonitor={gdkmonitor}
         exclusivity={Astal.Exclusivity.IGNORE}
         anchor={side === "left" ? TOP | LEFT : TOP | RIGHT}
-        layer={Astal.Layer.OVERLAY}
+        layer={Astal.Layer.TOP}
         keymode={Astal.Keymode.NONE}
         clickThrough={true}
         marginLeft={side === "left" ? FRAME_WIDTH : 0}
@@ -231,6 +313,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
             <box halign={Gtk.Align.END} valign={Gtk.Align.FILL}>
                 <RoundedAngleEnd place="topleft" fillOnFullBar />
                 <box className="pill pill-right" valign={Gtk.Align.FILL}>
+                    <SysTray />
                     <NetworkIndicator />
                     <VolumeIndicator />
                     <BluetoothIndicator />

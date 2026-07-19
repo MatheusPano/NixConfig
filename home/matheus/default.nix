@@ -8,6 +8,7 @@
     ./modules/ags/default.nix
     ./modules/flutter/default.nix
     ./modules/vscode/default.nix
+    ./modules/easyeffects/default.nix
     ./modules/packages.nix
   ];
 

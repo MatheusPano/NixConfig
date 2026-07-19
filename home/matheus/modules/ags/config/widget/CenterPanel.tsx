@@ -1,6 +1,7 @@
 import { Gtk, Gdk } from "astal/gtk3"
 import { Variable, GLib, bind, exec, execAsync } from "astal"
 import Gio from "gi://Gio"
+import GdkPixbuf from "gi://GdkPixbuf"
 import Mpris from "gi://AstalMpris"
 import PopupWindow from "../lib/PopupWindow"
 import { batteryInfo } from "../lib/battery"
@@ -563,29 +564,56 @@ function killPlayerApp(p: any) {
     execAsync(["pkill", "-i", token]).catch(() => {})
 }
 
+// mede a capa sem carregar a imagem: thumb de vídeo (16:9+) ganha
+// moldura larga, capa de álbum (ou sem arte) fica quadrada
+function artSize(path: string | null): [number, number] {
+    try {
+        if (path) {
+            const info = GdkPixbuf.Pixbuf.get_file_info(path) as any
+            const [, w, h] = info
+            if (w > 0 && h > 0 && w / h > 1.4) return [384, 216]
+        }
+    } catch { }
+    return [264, 264]
+}
+
 function MediaTabPlayer({ player, players, idx, menuOpen, onSelect }: {
     player: any, players: any[], idx: number,
     menuOpen: Variable<boolean>, onSelect: (i: number) => void
 }) {
     const positionPoll = Variable(0).poll(1000, () => player.get_position())
 
+    // dimensões da moldura acompanham a proporção da capa atual
+    const artDims = Variable<[number, number]>(artSize(player.coverArt))
+    const artNotify = player.connect("notify::cover-art", () =>
+        artDims.set(artSize(player.coverArt))
+    )
+
     const unsub = centerPanelVisible.subscribe(v =>
         v ? positionPoll.startPoll() : positionPoll.stopPoll()
     )
     if (!centerPanelVisible.get()) positionPoll.stopPoll()
 
-    return <overlay>
+    return <overlay halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER} hexpand vexpand>
         <box className="cp-mt"
             setup={(self: any) => self.connect("destroy", () => {
                 unsub()
+                player.disconnect(artNotify)
+                artDims.drop()
                 positionPoll.drop()
             })}
         >
-        {/* Thumb — tamanho fixo, não estica com o conteúdo */}
+        {/* Thumb — proporção segue a capa (16:9 pra vídeo, 1:1 pra álbum) */}
         <box
             className="cp-mt-art"
             valign={Gtk.Align.CENTER}
-            setup={(self: any) => self.set_size_request(200, 200)}
+            setup={(self: any) => {
+                self.set_size_request(...artDims.get())
+                const u = artDims.subscribe(([w, h]: [number, number]) =>
+                    self.set_size_request(w, h)
+                )
+                self.connect("destroy", u)
+            }}
             css={bind(player, "coverArt").as(art =>
                 art
                     ? `background-image: url("${art}"); background-size: cover; background-position: center;`
@@ -599,37 +627,63 @@ function MediaTabPlayer({ player, players, idx, menuOpen, onSelect }: {
             )}
         </box>
 
-        {/* Info + controles + progresso + chip do player */}
-        <box vertical hexpand className="cp-mt-info" valign={Gtk.Align.CENTER}>
+        {/* Info + progresso + controles */}
+        <box vertical className="cp-mt-info" valign={Gtk.Align.CENTER}
+            setup={(self: any) => self.set_size_request(400, -1)}
+        >
+            {/* Origem da mídia + atalhos (ir até o app / fechar o app) */}
+            <box className="cp-mt-toprow">
+                <button
+                    className="cp-mt-chip"
+                    halign={Gtk.Align.START}
+                    canFocus={false}
+                    onClicked={() => menuOpen.set(!menuOpen.get())}
+                    tooltipText={players.length > 1 ? "Escolher player" : ""}
+                >
+                    <box>
+                        <label className="cp-mt-chip-icon"
+                            label={bind(player, "identity").as(i => getPlayerIcon(i || ""))}
+                        />
+                        <label className="cp-mt-chip-name"
+                            label={bind(player, "identity").as(i => i || "Player")}
+                        />
+                        {players.length > 1 && <label className="cp-mt-chip-swap"
+                            label={menuOpen().as(o => o ? "󰅃" : "󰅀")}
+                        />}
+                    </box>
+                </button>
+                <box hexpand />
+                <button
+                    className="cp-mt-mini"
+                    canFocus={false}
+                    tooltipText="Ir até o app"
+                    onClicked={() => focusPlayerWindow(player)}
+                >
+                    <label label="󱂬" />
+                </button>
+                <button
+                    className="cp-mt-mini cp-mt-kill"
+                    canFocus={false}
+                    tooltipText="Fechar o app"
+                    onClicked={() => killPlayerApp(player)}
+                >
+                    <label label="󰩹" />
+                </button>
+            </box>
+
             <label className="cp-mt-title"
                 label={bind(player, "title").as(t => t || "Desconhecido")}
-                truncate maxWidthChars={28} halign={Gtk.Align.CENTER}
+                truncate maxWidthChars={30} halign={Gtk.Align.START}
+            />
+            <label className="cp-mt-artist"
+                label={bind(player, "artist").as(a => a || "Artista desconhecido")}
+                truncate maxWidthChars={36} halign={Gtk.Align.START}
             />
             <label className="cp-mt-album"
                 label={bind(player, "album").as(a => a || "")}
                 visible={bind(player, "album").as(a => !!a)}
-                truncate maxWidthChars={32} halign={Gtk.Align.CENTER}
+                truncate maxWidthChars={36} halign={Gtk.Align.START}
             />
-            <label className="cp-mt-artist"
-                label={bind(player, "artist").as(a => a || "Artista desconhecido")}
-                truncate maxWidthChars={32} halign={Gtk.Align.CENTER}
-            />
-
-            <box className="cp-mt-controls" halign={Gtk.Align.CENTER}>
-                <button className="cp-ctrl-btn" onClicked={() => player.previous()}
-                    sensitive={bind(player, "canGoPrevious")} canFocus={false}>
-                    <label label="󰒮" />
-                </button>
-                <button className="cp-ctrl-btn cp-play-btn" onClicked={() => player.play_pause()} canFocus={false}>
-                    <label label={bind(player, "playbackStatus").as(s =>
-                        s === Mpris.PlaybackStatus.PLAYING ? "󰏤" : "󰐊"
-                    )} />
-                </button>
-                <button className="cp-ctrl-btn" onClicked={() => player.next()}
-                    sensitive={bind(player, "canGoNext")} canFocus={false}>
-                    <label label="󰒭" />
-                </button>
-            </box>
 
             <box vertical className="cp-mt-progress">
                 <slider
@@ -656,54 +710,31 @@ function MediaTabPlayer({ player, players, idx, menuOpen, onSelect }: {
                 </box>
             </box>
 
-            {/* Chip do player + atalhos (ir até o app / fechar o app) */}
-            <box className="cp-mt-chiprow" halign={Gtk.Align.CENTER}>
-                <button
-                    className="cp-mt-mini"
-                    canFocus={false}
-                    tooltipText="Ir até o app"
-                    onClicked={() => focusPlayerWindow(player)}
-                >
-                    <label label="󱂬" />
+            <box className="cp-mt-controls" halign={Gtk.Align.CENTER}>
+                <button className="cp-ctrl-btn" onClicked={() => player.previous()}
+                    sensitive={bind(player, "canGoPrevious")} canFocus={false}>
+                    <label label="󰒮" />
                 </button>
-                <button
-                    className="cp-mt-chip"
-                    canFocus={false}
-                    onClicked={() => menuOpen.set(!menuOpen.get())}
-                    tooltipText={players.length > 1 ? "Escolher player" : ""}
-                >
-                    <box>
-                        <label className="cp-mt-chip-icon"
-                            label={bind(player, "identity").as(i => getPlayerIcon(i || ""))}
-                        />
-                        <label className="cp-mt-chip-name"
-                            label={bind(player, "identity").as(i => i || "Player")}
-                        />
-                        {players.length > 1 && <label className="cp-mt-chip-swap"
-                            label={menuOpen().as(o => o ? "󰅃" : "󰅀")}
-                        />}
-                    </box>
+                <button className="cp-ctrl-btn cp-play-btn" onClicked={() => player.play_pause()} canFocus={false}>
+                    <label label={bind(player, "playbackStatus").as(s =>
+                        s === Mpris.PlaybackStatus.PLAYING ? "󰏤" : "󰐊"
+                    )} />
                 </button>
-                <button
-                    className="cp-mt-mini cp-mt-kill"
-                    canFocus={false}
-                    tooltipText="Fechar o app"
-                    onClicked={() => killPlayerApp(player)}
-                >
-                    <label label="󰩹" />
+                <button className="cp-ctrl-btn" onClicked={() => player.next()}
+                    sensitive={bind(player, "canGoNext")} canFocus={false}>
+                    <label label="󰒭" />
                 </button>
             </box>
-
         </box>
         </box>
 
-        {/* Menu de players — flutua por cima do card, não empurra o layout */}
+        {/* Menu de players — flutua abaixo do chip, não empurra o layout */}
         <box
             className="cp-mt-menu"
-            halign={Gtk.Align.CENTER}
-            valign={Gtk.Align.END}
-            marginBottom={48}
-            marginLeft={224}
+            halign={Gtk.Align.START}
+            valign={Gtk.Align.START}
+            marginTop={58}
+            marginStart={artDims().as(([w]) => w + 56)}
             vertical
             visible={menuOpen().as(o => o && players.length > 1)}
         >

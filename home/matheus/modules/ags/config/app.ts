@@ -1,6 +1,6 @@
 import { App } from "astal/gtk3"
 import style from "./style.scss"
-import Bar from "./widget/Bar"
+import Bar, { trayRevealed } from "./widget/Bar"
 import CalendarPopup from "./widget/CalendarPopup"
 import MediaPopup from "./widget/MediaPopup"
 import QuickSettings, { qsVisible } from "./widget/QuickSettings"
@@ -29,6 +29,9 @@ App.start({
             res("ok")
         } else if (request === "clipboard" || request === "clip") {
             clipVisible.set(!clipVisible.get())
+            res("ok")
+        } else if (request === "tray") {
+            trayRevealed.set(!trayRevealed.get())
             res("ok")
         } else if (request.startsWith("tab:")) {
             // abre o painel central direto numa aba: ags request tab:media

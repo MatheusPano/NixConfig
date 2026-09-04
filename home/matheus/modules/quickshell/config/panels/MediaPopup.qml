@@ -13,10 +13,10 @@ PopupPanel {
     onDismissed: Panels.mediaOpen = false
     slide: "top"
 
+    // vão do topo dentro da janela (mesmo motivo do CalendarPopup)
     anchors.top: true
-    margins.top: 38
     implicitWidth: 380
-    implicitHeight: card.implicitHeight
+    implicitHeight: card.implicitHeight + 38
 
     property int activeIdx: 0
 
@@ -42,6 +42,7 @@ PopupPanel {
     Rectangle {
         id: card
         anchors.fill: parent
+        anchors.topMargin: 38
         radius: 20
         color: Theme.surface
         border.width: 1

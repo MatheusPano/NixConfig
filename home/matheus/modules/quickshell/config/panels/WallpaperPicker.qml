@@ -12,10 +12,10 @@ PopupPanel {
     onDismissed: Panels.wpOpen = false
     slide: "bottom"
 
+    // vão de baixo dentro da janela (senão o slide aparece cortado reto)
     anchors.bottom: true
-    margins.bottom: 20
     implicitWidth: Math.min(1100, 40 + Wallpapers.list.length * 172)
-    implicitHeight: 200
+    implicitHeight: 200 + 20
 
     onOpenChanged: {
         if (open)
@@ -24,6 +24,7 @@ PopupPanel {
 
     Rectangle {
         anchors.fill: parent
+        anchors.bottomMargin: 20
         radius: 20
         color: Theme.surface
         border.width: 1

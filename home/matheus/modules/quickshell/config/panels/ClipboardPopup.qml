@@ -13,10 +13,10 @@ PopupPanel {
     onDismissed: Panels.clipOpen = false
     slide: "bottom"
 
+    // vão de baixo dentro da janela (senão o slide aparece cortado reto)
     anchors.bottom: true
-    margins.bottom: 20
     implicitWidth: 680
-    implicitHeight: 440
+    implicitHeight: 440 + 20
 
     property string query: ""
     property int selected: 0
@@ -68,6 +68,7 @@ PopupPanel {
 
     Rectangle {
         anchors.fill: parent
+        anchors.bottomMargin: 20
         radius: 20
         color: Theme.surface
         border.width: 1

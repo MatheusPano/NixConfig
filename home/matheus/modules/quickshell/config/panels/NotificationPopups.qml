@@ -18,10 +18,11 @@ PanelWindow {
 
     readonly property var entry: NotifStore.popupCurrent
 
+    // o vão de 46px do topo fica dentro da janela: a cápsula desce da
+    // moldura sem aparecer cortada reta no meio do ar
     anchors.top: true
-    margins.top: 46
     implicitWidth: 560
-    implicitHeight: 100
+    implicitHeight: 100 + 46
     color: "transparent"
     visible: entry !== null
     WlrLayershell.layer: WlrLayer.Overlay
@@ -100,7 +101,7 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
 
             // desce da moldura + fade na entrada e na saída
-            y: root.orbShown ? 0 : -70
+            y: root.orbShown ? 46 : -70
             opacity: root.orbShown ? 1 : 0
 
             Behavior on y {

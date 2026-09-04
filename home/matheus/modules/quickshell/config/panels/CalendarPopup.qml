@@ -14,10 +14,11 @@ PopupPanel {
     onDismissed: Panels.calendarOpen = false
     slide: "top"
 
+    // o vão de 38px do topo fica dentro da janela: com margem na janela o
+    // slide aparecia cortado reto no meio do ar
     anchors.top: true
-    margins.top: 38
     implicitWidth: 340
-    implicitHeight: content.implicitHeight + 32
+    implicitHeight: content.implicitHeight + 32 + 38
 
     property int monthOffset: 0
     property var events: []
@@ -52,6 +53,7 @@ PopupPanel {
 
     Rectangle {
         anchors.fill: parent
+        anchors.topMargin: 38
         radius: 20
         color: Theme.surface
         border.width: 1

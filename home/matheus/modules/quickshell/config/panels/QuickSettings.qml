@@ -14,8 +14,10 @@ PopupPanel {
     onDismissed: Panels.qsOpen = false
     slide: "right"
 
-    // painel flutuante: descolado da moldura e abaixo da barra,
-    // cantos redondos por inteiro (estilo illogical-impulse)
+    // painel flutuante: descolado da moldura e abaixo da barra, cantos
+    // redondos por inteiro (estilo illogical-impulse). A janela encosta na
+    // borda da tela e o vão de 14px fica DENTRO dela — se a margem fosse da
+    // janela, o slide aparecia cortado reto no meio do ar.
     anchors {
         top: true
         bottom: true
@@ -24,11 +26,10 @@ PopupPanel {
 
     margins {
         top: Panels.barHeight + 10
-        right: 14
         bottom: 14
     }
 
-    implicitWidth: 484
+    implicitWidth: 484 + 14
 
     readonly property var tabIds: ["notif", "wifi", "bluetooth", "sound"]
 
@@ -58,6 +59,7 @@ PopupPanel {
 
     Rectangle {
         anchors.fill: parent
+        anchors.rightMargin: 14
         color: Theme.surface
         radius: 20
         border.width: 1

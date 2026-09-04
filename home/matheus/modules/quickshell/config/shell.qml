@@ -117,6 +117,10 @@ ShellRoot {
                 "keyword bind SUPER,A,global,quickshell:center",
                 "keyword bind SUPER SHIFT,W,global,quickshell:wallpaper",
                 "keyword bind SUPER,V,global,quickshell:clipboard",
+                // a shell anima os próprios painéis; a animação de layers do
+                // Hyprland por cima só deixava o início do slide mole
+                // (sintaxe de rules do Hyprland 0.56+: campo + match:)
+                "keyword layerrule animation none, match:namespace quickshell.*",
                 `keyword general:gaps_out ${Theme.gapsOutFor(Theme.zen)}`,
             ].join(" ; ");
             Quickshell.execDetached(["hyprctl", "--batch", binds]);

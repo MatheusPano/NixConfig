@@ -20,24 +20,26 @@ PanelWindow {
     default property alias content: contentSlot.data
 
     WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "quickshell-popup"
     WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
-    visible: open || closeDelay.running
+    // Sempre mapeada: mapear só no toggle custava o primeiro frame (upload
+    // de textura do painel inteiro) e disparava a animação de layers do
+    // Hyprland por cima do nosso slide — o "começo em marcha 1". Fechada,
+    // a janela é 100% transparente (conteúdo fora dela) e sem input.
+    visible: true
 
-    onOpenChanged: {
-        if (open) {
-            closeDelay.stop();
-            wrapper.forceActiveFocus();
-        } else {
-            closeDelay.restart();
-        }
+    mask: open ? null : emptyRegion
+
+    Region {
+        id: emptyRegion
     }
 
-    Timer {
-        id: closeDelay
-        interval: 320
+    onOpenChanged: {
+        if (open)
+            wrapper.forceActiveFocus();
     }
 
     HyprlandFocusGrab {

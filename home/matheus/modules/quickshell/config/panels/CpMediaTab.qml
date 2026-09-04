@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
 import Quickshell.Widgets
@@ -37,7 +38,15 @@ Item {
             if (!root.player)
                 return;
             root.pos = root.player.position;
-            root.len = root.player.length;
+            if (root.player.lengthSupported) {
+                root.len = root.player.length;
+            } else {
+                // Zen/Firefox não publicam mpris:length (o length do
+                // quickshell espelha a posição) — busca a duração real na
+                // página do YouTube, uma vez por vídeo, cacheado
+                root.ensureYtLen();
+                root.len = Math.max(0, root.ytLenCache[root.ytId] || 0);
+            }
         }
     }
 
@@ -49,16 +58,145 @@ Item {
         pos = Math.max(0, Math.min(len > 0 ? len : next, next));
     }
 
-    // arte: artUrl do player, senão thumbnail do YouTube via xesam:url
+    // id do vídeo no YouTube via xesam:url (thumbnail + duração)
+    readonly property string ytId: {
+        if (!player)
+            return "";
+        const url = player.metadata ? (player.metadata["xesam:url"] || "") : "";
+        return (url.match(/[?&]v=([\w-]{6,})/) || url.match(/youtu\.be\/([\w-]{6,})/)
+            || url.match(/youtube\.com\/(?:shorts|embed|live)\/([\w-]{6,})/) || [])[1] || "";
+    }
+
+    // arte: artUrl do player, senão thumbnail do YouTube
     readonly property string artSource: {
         if (!player)
             return "";
         if (player.trackArtUrl)
             return player.trackArtUrl;
-        const url = player.metadata ? (player.metadata["xesam:url"] || "") : "";
-        const id = (url.match(/[?&]v=([\w-]{6,})/) || url.match(/youtu\.be\/([\w-]{6,})/)
-            || url.match(/youtube\.com\/(?:shorts|embed|live)\/([\w-]{6,})/) || [])[1] || "";
-        return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : "";
+        return ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : "";
+    }
+
+    // duração via página do YouTube (players web não publicam mpris:length)
+    property var ytLenCache: ({})
+    property string ytFetching: ""
+
+    function ensureYtLen() {
+        if (!ytId || ytLenCache[ytId] !== undefined || ytLenProc.running)
+            return;
+        ytFetching = ytId;
+        ytLenProc.running = true;
+    }
+
+    Process {
+        id: ytLenProc
+        command: ["bash", "-c",
+            `curl -sL --max-time 6 'https://www.youtube.com/watch?v=${root.ytFetching}' | grep -o '"lengthSeconds":"[0-9]*"' | head -1 | tr -dc 0-9`]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const s = parseInt(text.trim());
+                root.ytLenCache[root.ytFetching] = (s > 0) ? s : -1;
+            }
+        }
+    }
+
+    // ── letra sincronizada (lrclib.net) ──
+    property bool lyricsOn: false
+    property var lyricsCache: ({})     // "artista|título" → { synced, state }
+    property var lyrics: []            // [{ t, line }] da faixa atual
+    property string lyricsState: "off" // loading | ok | miss
+    property string lyricsKey: ""
+
+    readonly property string trackKey: player
+        ? `${(player.trackArtist || "").toLowerCase()}|${(player.trackTitle || "").toLowerCase()}` : ""
+
+    readonly property int curLine: {
+        if (lyrics.length === 0 || lyrics[0].t > pos)
+            return -1;
+        let i = 0;
+        while (i + 1 < lyrics.length && lyrics[i + 1].t <= pos)
+            i++;
+        return i;
+    }
+
+    onTrackKeyChanged: if (lyricsOn) loadLyrics()
+    onLyricsOnChanged: if (lyricsOn) loadLyrics()
+
+    function loadLyrics() {
+        if (!player || trackKey === "|") {
+            lyrics = [];
+            lyricsState = "miss";
+            return;
+        }
+        const hit = lyricsCache[trackKey];
+        if (hit) {
+            lyrics = hit.synced;
+            lyricsState = hit.state;
+            return;
+        }
+        lyricsKey = trackKey;
+        lyrics = [];
+        lyricsState = "loading";
+        const artist = encodeURIComponent(player.trackArtist || "");
+        const track = encodeURIComponent(player.trackTitle || "");
+        const dur = len > 0 ? `&duration=${Math.round(len)}` : "";
+        lyricsProc.running = false;
+        lyricsProc.stage = "get";
+        lyricsProc.url = `https://lrclib.net/api/get?artist_name=${artist}&track_name=${track}${dur}`;
+        lyricsProc.fallback = `https://lrclib.net/api/search?q=${artist}+${track}`;
+        lyricsProc.running = true;
+    }
+
+    function parseLrc(raw) {
+        const out = [];
+        for (const line of (raw || "").split("\n")) {
+            const m = line.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s?(.*)$/);
+            if (m)
+                out.push({ t: parseInt(m[1]) * 60 + parseFloat(m[2]), line: m[3].trim() });
+        }
+        return out;
+    }
+
+    function finishLyrics(synced) {
+        const state = synced.length > 0 ? "ok" : "miss";
+        lyricsCache[lyricsKey] = { synced: synced, state: state };
+        if (lyricsKey === trackKey) {
+            lyrics = synced;
+            lyricsState = state;
+        }
+    }
+
+    Process {
+        id: lyricsProc
+
+        property string url
+        property string fallback
+        property string stage
+
+        command: ["curl", "-s", "--max-time", "6", url]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let synced = [];
+                try {
+                    const j = JSON.parse(text);
+                    if (lyricsProc.stage === "get") {
+                        synced = root.parseLrc(j.syncedLyrics || "");
+                        if (synced.length === 0) {
+                            // sem match direto: tenta a busca textual
+                            lyricsProc.stage = "search";
+                            lyricsProc.url = lyricsProc.fallback;
+                            lyricsProc.running = true;
+                            return;
+                        }
+                    } else {
+                        const hit = (Array.isArray(j) ? j : []).find(r => r.syncedLyrics);
+                        synced = root.parseLrc(hit ? hit.syncedLyrics : "");
+                    }
+                } catch (e) {}
+                root.finishLyrics(synced);
+            }
+        }
     }
 
     // token do app dono do player ("Mozilla zen" → "zen")
@@ -283,6 +421,7 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
 
                     Rectangle {
+                        visible: !root.lyricsOn
                         anchors.centerIn: parent
                         width: artImg.status === Image.Ready
                             ? (artImg.implicitWidth / artImg.implicitHeight > 1.4 ? 420 : 300)
@@ -316,6 +455,75 @@ Item {
                             text: "\u{F0386}"
                             font.pixelSize: 54
                             color: Theme.fgFaint
+                        }
+                    }
+
+                    // letra sincronizada no lugar da capa (karaokê)
+                    Rectangle {
+                        visible: root.lyricsOn
+                        anchors.fill: parent
+                        radius: 12
+                        color: Theme.cream ? Qt.rgba(1, 1, 1, 0.4) : Qt.rgba(0, 0, 0, 0.28)
+
+                        ListView {
+                            id: lyricsList
+                            anchors.fill: parent
+                            anchors.margins: 16
+                            clip: true
+                            spacing: 12
+                            model: root.lyrics
+                            currentIndex: root.curLine
+                            highlightRangeMode: ListView.ApplyRange
+                            preferredHighlightBegin: height / 2 - 26
+                            preferredHighlightEnd: height / 2 + 26
+                            highlightMoveDuration: 500
+                            boundsBehavior: Flickable.StopAtBounds
+
+                            delegate: UiText {
+                                required property var modelData
+                                required property int index
+
+                                readonly property bool cur: index === root.curLine
+
+                                width: lyricsList.width
+                                text: modelData.line === "" ? "\u266A" : modelData.line
+                                wrapMode: Text.WordWrap
+                                horizontalAlignment: Text.AlignHCenter
+                                font.pixelSize: cur ? 16 : 13
+                                font.bold: cur
+                                color: cur ? Theme.fg : Theme.fgDim
+                                opacity: cur ? 1 : 0.7
+
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: 200
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: root.player && root.player.canSeek
+                                        ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    onClicked: {
+                                        if (root.player && root.player.canSeek) {
+                                            root.player.position = modelData.t;
+                                            root.pos = modelData.t;
+                                        }
+                                    }
+                                }
+                            }
+
+                            UiText {
+                                visible: root.lyricsState !== "ok"
+                                anchors.centerIn: parent
+                                width: parent.width - 24
+                                horizontalAlignment: Text.AlignHCenter
+                                wrapMode: Text.WordWrap
+                                text: root.lyricsState === "loading"
+                                    ? "Buscando letra…" : "Letra não encontrada pra essa faixa"
+                                font.pixelSize: 12
+                                color: Theme.fgDim
+                            }
                         }
                     }
                 }
@@ -364,6 +572,24 @@ Item {
 
                         Item {
                             Layout.fillWidth: true
+                        }
+
+                        Clickable {
+                            baseColor: root.lyricsOn ? Theme.alpha(Theme.primary, 0.16) : Theme.card
+                            hoverColor: Theme.alpha(Theme.primary, 0.2)
+                            radius: 8
+                            implicitWidth: lyricsChipLabel.implicitWidth + 18
+                            implicitHeight: 26
+
+                            UiText {
+                                id: lyricsChipLabel
+                                anchors.centerIn: parent
+                                text: "Letra"
+                                font.pixelSize: 11
+                                color: root.lyricsOn ? Theme.primary : Theme.fgMid
+                            }
+
+                            onClicked: root.lyricsOn = !root.lyricsOn
                         }
 
                         Clickable {

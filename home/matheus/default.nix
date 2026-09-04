@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./modules/desktop-shell.nix
     ./modules/git/default.nix
     ./modules/zsh/default.nix
     ./modules/ghostty/default.nix
@@ -10,12 +11,17 @@
     ./modules/xdg/default.nix
     ./modules/hyprland/default.nix
     ./modules/ags/default.nix
+    ./modules/quickshell/default.nix
     ./modules/flutter/default.nix
     ./modules/vscode/default.nix
     ./modules/easyeffects/default.nix
     ./modules/spicetify/default.nix
     ./modules/packages.nix
   ];
+
+  # Shell de desktop ativa. Voltar pro AGS = trocar pra "ags" e rebuild;
+  # os dois módulos ficam no repo (ver modules/desktop-shell.nix).
+  desktop.bar = "quickshell";
 
   home.username = "matheus";
   home.homeDirectory = "/home/matheus";

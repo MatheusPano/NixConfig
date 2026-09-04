@@ -54,7 +54,9 @@ in
   # crashasse, ficava sem barra até relogar, e nada garantia a ordem em relação
   # ao Hyprland. Como a sessão usa UWSM, o graphical-session.target é real, então
   # o serviço sobe no momento certo e reinicia sozinho.
-  systemd.user.services.ags = {
+  # Gated pelo desktop.bar: com o quickshell ativo este serviço não existe,
+  # mas o módulo (e o config em modules/ags/config) fica intacto no repo.
+  systemd.user.services.ags = lib.mkIf (config.desktop.bar == "ags") {
     Unit = {
       Description = "AGS - barra e paineis do desktop";
       PartOf = [ "graphical-session.target" ];

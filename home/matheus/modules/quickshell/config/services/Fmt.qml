@@ -25,13 +25,14 @@ Singleton {
         return `${weekdays[now.getDay()]}, ${now.getDate()} de ${months[now.getMonth()]}`;
     }
 
-    // 205s → "3:25"
+    // 205s → "3:25"; 8887s → "2:28:07" (vira relógio a partir de 1h)
     function mmss(secs) {
         if (secs <= 0 || isNaN(secs))
             return "0:00";
-        const m = Math.floor(secs / 60);
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
         const s = Math.floor(secs % 60);
-        return `${m}:${pad(s)}`;
+        return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
     }
 
     function timeAgo(unixSecs) {

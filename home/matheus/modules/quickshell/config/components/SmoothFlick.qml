@@ -21,7 +21,7 @@ Flickable {
     // px por tick da roda (angleDelta de 120)
     property real wheelStep: 150
     // multiplicador do arrasto de dois dedos
-    property real touchpadFactor: 2.2
+    property real touchpadFactor: 2.6
     // desaceleração da inércia (px/s²) — menor = desliza mais longe
     property real flingDecel: 2200
 

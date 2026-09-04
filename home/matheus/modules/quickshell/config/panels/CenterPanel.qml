@@ -169,7 +169,7 @@ PopupPanel {
             }
 
             // ── conteúdo ──
-            Flickable {
+            SmoothFlick {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
@@ -183,7 +183,6 @@ PopupPanel {
                         return Math.max(mediaTab.implicitHeight, height);
                     return persTab.implicitHeight;
                 }
-                boundsBehavior: Flickable.StopAtBounds
 
                 component CpPage: Item {
                     property bool active: false

@@ -434,13 +434,12 @@ PopupPanel {
             }
 
             // ── conteúdo da aba ──
-            Flickable {
+            SmoothFlick {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
                 contentWidth: width
                 contentHeight: tabStack.height
-                boundsBehavior: Flickable.StopAtBounds
 
                 Item {
                     id: tabStack

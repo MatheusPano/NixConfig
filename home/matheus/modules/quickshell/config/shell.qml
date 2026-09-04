@@ -69,17 +69,20 @@ ShellRoot {
         running: Theme.managed
         interval: 3000
         onTriggered: {
+            // sem aspas nos binds: o execDetached não passa por shell, então
+            // aspas iriam literais pro hyprctl e o exec ficava com uma aspa
+            // sobrando no fim ("qs ipc call panel zen'" — bind morto)
             const binds = [
                 "keyword unbind SUPER,B",
                 "keyword unbind SUPER,N",
                 "keyword unbind SUPER,A",
                 "keyword unbind SUPER SHIFT,W",
                 "keyword unbind SUPER,V",
-                "keyword bind 'SUPER,B,exec,qs ipc call panel zen'",
-                "keyword bind 'SUPER,N,exec,qs ipc call panel sidebar'",
-                "keyword bind 'SUPER,A,exec,qs ipc call panel center'",
-                "keyword bind 'SUPER SHIFT,W,exec,qs ipc call panel wallpaper'",
-                "keyword bind 'SUPER,V,exec,qs ipc call panel clipboard'",
+                "keyword bind SUPER,B,exec,qs ipc call panel zen",
+                "keyword bind SUPER,N,exec,qs ipc call panel sidebar",
+                "keyword bind SUPER,A,exec,qs ipc call panel center",
+                "keyword bind SUPER SHIFT,W,exec,qs ipc call panel wallpaper",
+                "keyword bind SUPER,V,exec,qs ipc call panel clipboard",
                 `keyword general:gaps_out ${Theme.gapsOutFor(Theme.zen)}`,
             ].join(" ; ");
             Quickshell.execDetached(["hyprctl", "--batch", binds]);

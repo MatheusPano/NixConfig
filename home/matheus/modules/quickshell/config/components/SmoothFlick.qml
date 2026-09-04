@@ -1,12 +1,17 @@
 import QtQuick
 
 // Flickable com scroll "cremoso" nos dois mundos:
-//  · roda do mouse (angleDelta): anima contentY com OutExpo e ticks
-//    encadeados acumulam no destino — o flick nativo do Qt injeta
+//  · roda do mouse (ticks de 120): cada tick anima contentY com OutExpo e
+//    ticks encadeados acumulam no destino — o flick nativo do Qt injeta
 //    velocidade com atrito e fica pesado;
-//  · touchpad (pixelDelta): segue o dedo (com multiplicador) e, ao soltar,
-//    desliza com inércia de desaceleração constante, tipo GTK/navegador —
-//    sem isso o scroll morre seco na hora que o dedo sai do pad.
+//  · touchpad: segue o dedo (com multiplicador) e, ao soltar, desliza com
+//    inércia de desaceleração constante, tipo GTK/navegador.
+//
+// A captura usa MouseArea.onWheel, NÃO WheelHandler: no quickshell 0.3 /
+// Qt em layer-shell o WheelHandler simplesmente não recebe eventos de
+// roda (testado isolado — MouseArea recebe, WheelHandler não). O
+// interceptador vive no contentItem com z alto e sem botões aceitos, então
+// cliques e hover atravessam normalmente.
 Flickable {
     id: root
 
@@ -45,8 +50,8 @@ Flickable {
         easing.type: Easing.OutQuad
     }
 
-    // o Wayland manda axis_stop quando os dedos saem do pad, mas nem toda
-    // stack entrega isso como evento; o timer é o gatilho de segurança
+    // gatilho de fim de gesto do touchpad (o Wayland manda axis_stop, mas
+    // nem sempre ele chega como evento; o timer cobre)
     Timer {
         id: tpEndTimer
         interval: 90
@@ -68,40 +73,61 @@ Flickable {
         flingAnim.restart();
     }
 
-    WheelHandler {
-        target: null
+    function fingerMove(px) {
+        wheelAnim.stop();
+        flingAnim.stop();
+        const now = Date.now();
+        const prev = contentY;
+        contentY = clampY(prev - px * touchpadFactor);
+        const dt = now - tpLastTs;
+        if (dt > 0 && dt < 100) {
+            const inst = (contentY - prev) / (dt / 1000);
+            tpVel = tpVel * 0.4 + inst * 0.6;
+        } else {
+            tpVel = 0;
+        }
+        tpLastTs = now;
+        destY = contentY;
+        tpEndTimer.restart();
+    }
 
-        onWheel: event => {
-            if (event.pixelDelta.y !== 0) {
-                wheelAnim.stop();
-                flingAnim.stop();
-                const now = Date.now();
-                const prev = root.contentY;
-                root.contentY = root.clampY(prev - event.pixelDelta.y * root.touchpadFactor);
-                const dt = now - root.tpLastTs;
-                if (dt > 0 && dt < 100) {
-                    const inst = (root.contentY - prev) / (dt / 1000);
-                    root.tpVel = root.tpVel * 0.4 + inst * 0.6;
-                } else {
-                    root.tpVel = 0;
-                }
-                root.tpLastTs = now;
-                root.destY = root.contentY;
-                tpEndTimer.restart();
-            } else if (event.angleDelta.y !== 0) {
-                flingAnim.stop();
-                const from = root.contentY;
-                const base = wheelAnim.running ? root.destY : from;
-                root.destY = root.clampY(base - (event.angleDelta.y / 120) * root.wheelStep);
-                wheelAnim.stop();
-                wheelAnim.from = from;
-                wheelAnim.to = root.destY;
-                wheelAnim.restart();
+    function wheelTick(ticks) {
+        flingAnim.stop();
+        const from = contentY;
+        const base = wheelAnim.running ? destY : from;
+        destY = clampY(base - ticks * wheelStep);
+        wheelAnim.stop();
+        wheelAnim.from = from;
+        wheelAnim.to = destY;
+        wheelAnim.restart();
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        z: 9999
+        acceptedButtons: Qt.NoButton
+
+        onWheel: wheel => {
+            // log temporário p/ diagnóstico do formato dos eventos
+            console.warn("[SmoothFlick] px:", wheel.pixelDelta.y,
+                         "ang:", wheel.angleDelta.y, "inv:", wheel.inverted);
+
+            const px = wheel.pixelDelta.y;
+            const ang = wheel.angleDelta.y;
+            if (px !== 0) {
+                // touchpad de verdade: delta em pixels
+                root.fingerMove(px);
+            } else if (ang !== 0 && ang % 120 === 0 && !tpEndTimer.running) {
+                // tick discreto de roda (fora de gesto de dedo em andamento)
+                root.wheelTick(ang / 120);
+            } else if (ang !== 0) {
+                // angleDelta contínuo = dedo (Qt sintetiza ~8x o px)
+                root.fingerMove(ang / 8);
             } else if (tpEndTimer.running) {
                 // deltas zerados no meio de um gesto = axis_stop (soltou)
                 root.startFling();
             }
-            event.accepted = true;
+            wheel.accepted = true;
         }
     }
 }

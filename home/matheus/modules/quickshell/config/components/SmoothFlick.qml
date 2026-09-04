@@ -12,13 +12,16 @@ import QtQuick
 // roda (testado isolado — MouseArea recebe, WheelHandler não). O
 // interceptador vive no contentItem com z alto e sem botões aceitos, então
 // cliques e hover atravessam normalmente.
+//
+// Knobs de sensação: touchpadFactor (quanto o dedo rende), flingDecel
+// (menor = inércia desliza mais longe), wheelStep (px por tick de roda).
 Flickable {
     id: root
 
     // px por tick da roda (angleDelta de 120)
     property real wheelStep: 150
     // multiplicador do arrasto de dois dedos
-    property real touchpadFactor: 1.3
+    property real touchpadFactor: 2.2
     // desaceleração da inércia (px/s²) — menor = desliza mais longe
     property real flingDecel: 2200
 
@@ -61,7 +64,8 @@ Flickable {
     function startFling() {
         tpEndTimer.stop();
         // dedos pararam no pad antes de soltar → sem inércia
-        const v = (Date.now() - tpLastTs > 120) ? 0 : tpVel;
+        const raw = (Date.now() - tpLastTs > 120) ? 0 : tpVel;
+        const v = Math.max(-4000, Math.min(4000, raw));
         tpVel = 0;
         if (Math.abs(v) < 250)
             return;
@@ -83,9 +87,10 @@ Flickable {
         if (dt > 0 && dt < 100) {
             const inst = (contentY - prev) / (dt / 1000);
             tpVel = tpVel * 0.4 + inst * 0.6;
-        } else {
+        } else if (dt > 0) {
             tpVel = 0;
         }
+        // dt <= 0 = mesmo milissegundo: mantém a velocidade anterior
         tpLastTs = now;
         destY = contentY;
         tpEndTimer.restart();
@@ -108,21 +113,16 @@ Flickable {
         acceptedButtons: Qt.NoButton
 
         onWheel: wheel => {
-            // log temporário p/ diagnóstico do formato dos eventos
-            console.warn("[SmoothFlick] px:", wheel.pixelDelta.y,
-                         "ang:", wheel.angleDelta.y, "inv:", wheel.inverted);
-
+            // Medido neste touchpad: angleDelta ≈ 12x o deslocamento real em
+            // px do dedo, e pixelDelta é o mesmo valor truncado pra inteiro
+            // (perde até 40% em gesto lento) — então o dedo usa angleDelta/12.
             const px = wheel.pixelDelta.y;
             const ang = wheel.angleDelta.y;
-            if (px !== 0) {
-                // touchpad de verdade: delta em pixels
-                root.fingerMove(px);
-            } else if (ang !== 0 && ang % 120 === 0 && !tpEndTimer.running) {
+            if (px === 0 && ang !== 0 && ang % 120 === 0 && !tpEndTimer.running) {
                 // tick discreto de roda (fora de gesto de dedo em andamento)
                 root.wheelTick(ang / 120);
-            } else if (ang !== 0) {
-                // angleDelta contínuo = dedo (Qt sintetiza ~8x o px)
-                root.fingerMove(ang / 8);
+            } else if (ang !== 0 || px !== 0) {
+                root.fingerMove(ang !== 0 ? ang / 12 : px);
             } else if (tpEndTimer.running) {
                 // deltas zerados no meio de um gesto = axis_stop (soltou)
                 root.startFling();

@@ -1,6 +1,10 @@
 { config, ... }:
 
 {
+  imports = [
+    ./hypridle.nix
+  ];
+
   wayland.windowManager.hyprland = {
     enable = true;
     configType = "hyprlang";
@@ -13,8 +17,10 @@
 
   xdg.configFile = {
     "hypr/hyprland.conf".source = ./hyprland.conf;
-    "hypr/hyprpaper.conf".source = ./hyprpaper.conf;
     "hypr/hyprlock.conf".source = ./hyprlock.conf;
+    # Sem hyprpaper.conf: o wallpaper e do awww (awww-daemon no hyprland.conf) e
+    # o arquivo do hyprpaper so criava duvida sobre qual editar.
+
     # Symlink gravavel (fora da store): o WallpaperPicker do AGS monitora e
     # grava nessa pasta em runtime, entao ela nao pode ser read-only.
     "hypr/wallpapers".source =

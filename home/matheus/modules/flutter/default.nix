@@ -36,7 +36,31 @@ let
   };
 
   androidSdk = android.androidsdk;
-  androidSdkRoot = "${androidSdk}/libexec/android-sdk";
+  androidSdkRootRaw = "${androidSdk}/libexec/android-sdk";
+
+  # O androidenv instala o cmdline-tools numa pasta com o número da versão
+  # (ex.: cmdline-tools/21.0) e NÃO cria o symlink `latest`. A extensão
+  # Dart/Flutter do VS Code procura o avdmanager em cmdline-tools/latest/bin,
+  # então ela falha com "avdmanager is missing from the Android SDK" mesmo
+  # com o binário existindo. Como o SDK fica read-only no /nix/store, montamos
+  # um SDK root espelhado (só symlinks) que acrescenta o `latest`.
+  androidSdkRootPkg = pkgs.runCommand "android-sdk-latest-link" { } ''
+    mkdir -p "$out"
+    for entry in ${androidSdkRootRaw}/*; do
+      name=$(basename "$entry")
+      if [ "$name" = "cmdline-tools" ]; then
+        mkdir -p "$out/cmdline-tools"
+        for tool in "$entry"/*; do
+          ln -s "$tool" "$out/cmdline-tools/$(basename "$tool")"
+        done
+        latest=$(ls -d "$entry"/*/ | sort -V | tail -n1)
+        ln -s "$latest" "$out/cmdline-tools/latest"
+      else
+        ln -s "$entry" "$out/$name"
+      fi
+    done
+  '';
+  androidSdkRoot = "${androidSdkRootPkg}";
   buildToolsVersion = "36.0.0";
 in
 {

@@ -42,7 +42,7 @@ $separator: rgba(255, 255, 255, 0.06);
 .calendar-container *,
 .media-popup-content *,
 .wp-panel *,
-.notif-popup * {
+.notif-capsule * {
     font-family: $font-ui;
 }
 
@@ -54,18 +54,27 @@ label.qs-toggle-icon,
 label.sidebar-info-icon,
 label.sidebar-list-icon,
 label.sidebar-notif-nerd-icon,
+label.sidebar-battery-icon,
+label.sidebar-profile-icon,
+label.sidebar-empty-icon,
+label.qs-toggle-chevron,
+label.notif-group-icon,
 label.cp-tab-icon,
 label.cp-info-icon,
-label.cp-media-empty-icon,
-label.cp-mt-chip-icon,
-label.cp-mt-chip-swap,
-label.cp-mt-menu-check,
-label.cp-mt-art-fallback,
-.cp-mt-mini label,
+label.cp-stat-icon,
+label.cp-chip-icon,
+label.cp-empty-icon,
 label.cp-profile-icon,
 label.cp-slider-icon,
+label.cp-media-empty-icon,
 label.cp-weather-icon,
-label.cp-wp-folder-icon,
+label.cp-weather-meta-icon,
+label.cp-weather-hour-icon,
+label.cp-weather-day-icon,
+label.cp-weather-day-rain,
+label.cp-stage-source-icon,
+label.cp-stage-art-fallback,
+label.cp-player-chip-dot,
 label.clip-empty-icon,
 label.clip-search-icon,
 label.clip-type-icon,
@@ -73,15 +82,19 @@ label.swatch-dot-icon,
 label.media-empty-icon,
 label.media-source-icon,
 label.media-volume-icon,
-label.notif-popup-nerd-icon,
+label.notif-orb-icon,
 .cal-nav-btn label,
 .clip-del label,
 .cp-ctrl-btn label,
 .cp-play-btn label,
-.cp-todo-add label,
-.cp-todo-check label,
-.cp-todo-del label,
+.cp-icon-btn label,
+.cp-proc-kill label,
+.cp-weather-city-btn label,
+.cp-slider-icon-btn label,
+.cp-stage-mini label,
 .power-btn label,
+.qs-slider-icon label,
+.notif-group-clear label,
 .sidebar-notif-dismiss label,
 .sidebar-shot-btn label,
 .sidebar-slider-icon label,
@@ -914,85 +927,68 @@ window.NotificationPopups {
     background: transparent;
 }
 
-.notif-popup-list {
-    padding: 10px 14px;
+// margem no slot pra sombra da cápsula respirar
+.notif-capsule-slot {
+    padding: 4px 24px 20px 24px;
 }
 
-.notif-popup {
-    background: rgba(17, 17, 27, 0.96);
+.notif-capsule {
+    background: rgba(17, 17, 27, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    min-width: 340px;
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7),
-                0 2px 8px rgba(0, 0, 0, 0.3);
+    border-radius: 999px;
+    padding: 6px;
 }
 
-.notif-popup-icon-wrap {
-    margin-right: 12px;
-    min-width: 40px;
-    min-height: 40px;
-    border-radius: 12px;
+.notif-orb {
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 999px;
     background: rgba(255, 255, 255, 0.06);
-    padding: 0;
 }
 
-.notif-popup-nerd-icon {
-    font-size: 20px;
+// foto do contato / favicon recortados em círculo
+.notif-orb-img {
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.notif-orb-icon {
+    font-size: 22px;
     color: $accent;
-    min-width: 40px;
-    min-height: 40px;
 }
 
-.notif-popup-fileicon {
-    min-width: 28px;
-    min-height: 28px;
-    margin: 6px;
-    border-radius: 8px;
+.notif-orb-themed {
+    font-size: 26px;
 }
 
-.notif-popup-header {
-    margin-bottom: 2px;
+.notif-capsule-content {
+    margin-left: 12px;
+    margin-right: 16px;
 }
 
-.notif-popup-appname {
+.notif-capsule-app {
     font-size: 10px;
     font-weight: bold;
     color: $muted;
     letter-spacing: 0.5px;
 }
 
-.notif-popup-time {
+.notif-capsule-time {
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.2);
-    margin-right: 6px;
+    color: rgba(255, 255, 255, 0.25);
+    margin-left: 8px;
 }
 
-.notif-popup-close {
-    color: rgba(255, 255, 255, 0.15);
-    font-size: 13px;
-    padding: 2px 4px;
-    border-radius: 6px;
-    transition: 180ms ease;
-
-    &:hover {
-        background: rgba($red, 0.12);
-        color: $red;
-    }
-}
-
-.notif-popup-title {
+.notif-capsule-title {
     font-size: 13px;
     font-weight: bold;
     color: $fg;
-    margin-bottom: 1px;
 }
 
-.notif-popup-body {
+.notif-capsule-body {
     font-size: 12px;
     color: $fg-mid;
-    margin-top: 2px;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1183,12 +1179,6 @@ window.CenterPanel {
     font-size: 11px;
     color: $muted;
     min-width: 36px;
-}
-
-.cp-separator {
-    background: rgba(255, 255, 255, 0.06);
-    min-height: 1px;
-    margin: 6px 4px;
 }
 
 .cp-info-row {
@@ -1442,56 +1432,27 @@ window.CenterPanel {
 }
 
 // ── Wallpaper tab (inside center panel) ─────────────────────
+// Personalização: ajustes | papel de parede
+.cp-pers {
+    padding: 0 2px;
+}
+
+.cp-pers-col {
+    padding-right: 10px;
+}
+
+.cp-pers-col-right {
+    padding-right: 0;
+    padding-left: 10px;
+}
+
 .cp-wp {
-    min-width: 680px;
+    // sem isso a coluna encolhe pro conteúdo e as duas ficam desiguais
+    min-width: 420px;
 }
 
-.cp-wp-header {
-    padding: 0 4px 10px;
-}
-
-.cp-wp-title {
-    font-size: 14px;
-    font-weight: bold;
-    color: $fg-mid;
-}
-
-.cp-wp-refresh-btn {
-    font-size: 11px;
-    color: $fg-mid;
-    padding: 4px 12px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    margin-right: 6px;
-    transition: 180ms ease;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: $fg;
-    }
-}
-
-.cp-wp-folder-btn {
-    font-size: 11px;
-    color: $fg-mid;
-    padding: 4px 12px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    transition: 180ms ease;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: $fg;
-    }
-}
-
-.cp-wp-folder-icon {
-    margin-right: 6px;
-    font-size: 14px;
-}
-
-.cp-wp-scroll {
-    min-height: 280px;
+.cp-wp-grid {
+    margin-top: 4px;
 }
 
 .cp-wp-item {
@@ -1512,8 +1473,18 @@ window.CenterPanel {
 
 .cp-wp-preview {
     min-width: 150px;
-    min-height: 90px;
+    min-height: 100px;
     border-radius: 8px;
+}
+
+// A borda de "em uso" desaparece contra wallpaper claro; o visto resolve
+.cp-wp-check {
+    font-size: 12px;
+    color: #ffffff;
+    background: $accent;
+    border-radius: 10px;
+    padding: 2px 5px;
+    margin: 6px;
 }
 
 // ── Power buttons ───────────────────────────────────────────
@@ -1684,101 +1655,16 @@ window.CenterPanel {
 }
 
 // ── Center panel: notas rápidas / todo ──────────────────────
-.cp-todos-col {
-    min-width: 240px;
-    margin-left: 20px;
-}
 
-.cp-todos {
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 16px;
-    padding: 12px;
-}
 
-.cp-todo-input {
-    margin-bottom: 6px;
-}
 
-.cp-todo-entry {
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
-    padding: 5px 10px;
-    color: $fg;
-    font-size: 12px;
-    caret-color: $fg;
 
-    selection {
-        background: $accent-dim;
-    }
-}
 
-.cp-todo-add {
-    font-size: 14px;
-    color: $fg-mid;
-    padding: 4px 10px;
-    margin-left: 4px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    transition: 180ms ease;
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: $fg;
-    }
-}
 
-.cp-todo-scroll {
-    min-height: 220px;
-}
 
-.cp-todo-row {
-    padding: 3px 2px;
-    border-radius: 8px;
-    transition: 180ms ease;
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.04);
-    }
-}
 
-.cp-todo-check {
-    font-size: 14px;
-    color: $muted;
-    padding: 2px 6px;
-    border-radius: 6px;
-    transition: 180ms ease;
-
-    &:hover { color: $fg; }
-    &.done { color: $accent; }
-}
-
-.cp-todo-text {
-    font-size: 12px;
-    color: $fg;
-
-    &.done {
-        color: $muted;
-    }
-}
-
-.cp-todo-del {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.15);
-    padding: 2px 6px;
-    border-radius: 6px;
-    transition: 180ms ease;
-
-    &:hover {
-        background: rgba($red, 0.12);
-        color: $red;
-    }
-}
-
-.cp-todo-empty {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.2);
-    padding: 12px 0;
-}
 
 // ── Center panel: sistema com levelbars ─────────────────────
 .cp-level-row {
@@ -1845,38 +1731,12 @@ window.CenterPanel {
     font-size: 14px;
 }
 
-// ── Center panel: opções de wallpaper ───────────────────────
-.cp-wp-options {
-    padding: 0 4px 10px;
-}
-
-.cp-option-toggle {
-    font-size: 13px;
-    color: $fg-mid;
-    padding: 6px 14px;
-    margin-right: 6px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid transparent;
-    transition: 180ms ease;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: $fg;
-    }
-
-    &.active {
-        background: $accent-dim;
-        color: $accent;
-        border-color: rgba(122, 162, 247, 0.4);
-    }
-}
-
 .cp-accent-chip {
     min-width: 14px;
     min-height: 14px;
     border-radius: 50%;
-    margin-left: 8px;
+    // afastada da fila pra não parecer mais uma opção clicável
+    margin-left: 18px;
     border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
@@ -2163,7 +2023,6 @@ window.CenterPanel {
 
 // cores por tipo de evento
 .island-media .island-icon { color: $purple; }
-.island-notif .island-icon { color: $yellow; }
 .island-bt .island-icon { color: $cyan; }
 .island-mic .island-icon { color: $red; }
 
@@ -2253,256 +2112,33 @@ window.CenterPanel {
     min-height: 420px;
 }
 
-.cp-mt {
-    padding: 24px;
-}
 
-.cp-mt-art {
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.04);
-    margin-right: 36px;
-    box-shadow:
-        0 20px 44px rgba(0, 0, 0, 0.55),
-        0 3px 10px rgba(0, 0, 0, 0.35);
-}
 
-.cp-mt-art-fallback {
-    font-size: 56px;
-    color: rgba(255, 255, 255, 0.12);
-}
 
-.cp-mt-toprow {
-    margin-bottom: 16px;
-}
 
-.cp-mt-title {
-    font-size: 21px;
-    font-weight: 700;
-    color: $fg;
-    margin-bottom: 3px;
-}
 
-.cp-mt-artist {
-    font-size: 13px;
-    color: $fg-mid;
-}
 
-.cp-mt-album {
-    font-size: 11px;
-    color: $muted;
-    margin-top: 2px;
-}
 
-.cp-mt-progress {
-    margin-top: 20px;
-
-    .cp-time-label {
-        font-size: 10px;
-        color: $muted;
-        margin-top: 6px;
-    }
-
-    // barra fina, cursor só aparece no hover (estilo Apple Music)
-    .cp-progress-bar {
-        trough {
-            min-height: 4px;
-            border-radius: 2px;
-            background: rgba(255, 255, 255, 0.10);
-
-            highlight {
-                min-height: 4px;
-                border-radius: 2px;
-                background: rgba(255, 255, 255, 0.75);
-            }
-        }
-
-        slider {
-            min-width: 10px;
-            min-height: 10px;
-            margin: -3px 0;
-            opacity: 0;
-            transition: opacity 150ms ease;
-        }
-
-        &:hover slider {
-            opacity: 1;
-        }
-    }
-}
 
 // transporte monocromático, sem círculo de destaque
-.cp-mt-controls {
-    margin-top: 10px;
-
-    .cp-ctrl-btn {
-        color: $fg;
-        padding: 6px 16px;
-        border-radius: 12px;
-        background: transparent;
-        transition: 150ms ease;
-
-        // o reset `*` fixa font-size no label, então o tamanho
-        // precisa ser declarado no próprio label
-        label {
-            font-size: 23px;
-        }
-
-        &:hover {
-            background: rgba(255, 255, 255, 0.07);
-        }
-
-        &:disabled {
-            color: rgba(255, 255, 255, 0.22);
-        }
-    }
-
-    .cp-play-btn {
-        color: $fg;
-        background: transparent;
-        padding: 0 22px;
-        margin: 0 6px;
-
-        label {
-            font-size: 38px;
-        }
-
-        &:hover {
-            background: rgba(255, 255, 255, 0.07);
-        }
-    }
-}
 
 // chip discreto com a origem ("Mozilla zen", "Spotify"…)
-.cp-mt-chip {
-    padding: 3px 12px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-    transition: 180ms ease;
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.11);
-    }
-}
 
-.cp-mt-chip-icon {
-    font-size: 12px;
-    color: $fg-mid;
-    margin-right: 7px;
-}
 
-.cp-mt-chip-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: $fg-mid;
-}
 
-.cp-mt-chip-swap {
-    font-size: 10px;
-    color: $muted;
-    margin-left: 7px;
-}
 
-.cp-mt-volume {
-    margin-left: 20px;
-    padding: 8px 4px;
-}
 
-.cp-mt-vol-icon {
-    font-size: 15px;
-    color: $fg-mid;
-    margin-bottom: 8px;
-}
 
-.cp-mt-vol-slider {
-    min-height: 150px;
-
-    trough {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-        min-width: 6px;
-
-        highlight {
-            background: $accent;
-            border-radius: 4px;
-            min-width: 6px;
-        }
-    }
-
-    slider {
-        background: $fg;
-        border-radius: 50%;
-        min-width: 14px;
-        min-height: 14px;
-        margin: 0 -4px;
-    }
-}
-
-.cp-mt-vol-value {
-    font-size: 10px;
-    color: $muted;
-    margin-top: 8px;
-}
 
 // ── Aba Mídia: atalhos + menu de players ────────────────────
 // atalhos fantasma no canto superior direito da coluna de info
-.cp-mt-mini {
-    color: $muted;
-    padding: 3px 8px;
-    margin-left: 4px;
-    border-radius: 8px;
-    background: transparent;
-    transition: 150ms ease;
 
-    label {
-        font-size: 13px;
-    }
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: $fg;
-    }
-}
 
-.cp-mt-kill:hover {
-    background: rgba(247, 118, 142, 0.15);
-    color: $red;
-}
 
-.cp-mt-menu {
-    margin-top: 6px;
-    padding: 4px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid $border;
-    min-width: 180px;
-}
-
-.cp-mt-menu-item {
-    padding: 6px 12px;
-    border-radius: 9px;
-    transition: 150ms ease;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.08);
-    }
-
-    &.active {
-        background: $accent-dim;
-    }
-}
-
-.cp-mt-menu-check {
-    font-size: 12px;
-    color: $accent;
-    margin-left: 10px;
-}
 
 // menu de players flutuante (overlay) — fundo sólido + sombra
-.cp-mt-menu {
-    background: rgba(24, 24, 34, 0.98);
-    border: 1px solid $border-light;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65);
-}
 
 // painel central fundido com a barra (curvas no topo, sem borda lateral)
 .cp-container {
@@ -2579,6 +2215,11 @@ window.CenterPanel {
 
 .cp-card-row {
     padding: 10px 16px;
+}
+
+// controle embaixo do rótulo (fila de swatches)
+.cp-card-row-stacked .cp-row-control {
+    margin-top: 8px;
 }
 
 .cp-card-sep {
@@ -2876,4 +2517,930 @@ window.ClipboardPopup {
         color: $red;
         background: rgba(247, 118, 142, 0.1);
     }
+}
+
+// ═══════════════════════════════════════════════════════════
+// REFORMA 2026-08-08 — sidebar densa + Home em 3 colunas
+// ═══════════════════════════════════════════════════════════
+
+// ── Compartilhado: cartões, chips, empty states ─────────────
+.cp-card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: $fg-mid;
+    margin: 2px 2px 8px;
+}
+
+.cp-icon-btn {
+    font-size: 13px;
+    color: $muted;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: 150ms ease;
+
+    &:hover {
+        background: $card-hover;
+        color: $fg;
+    }
+}
+
+.cp-chip-btn {
+    font-size: 12px;
+    color: $fg-mid;
+    background: $card;
+    padding: 7px 13px;
+    margin-right: 8px;
+    border-radius: 10px;
+    transition: 150ms ease;
+
+    &:hover {
+        background: $card-hover;
+        color: $fg;
+    }
+}
+
+.cp-chip-icon {
+    font-size: 13px;
+    margin-right: 7px;
+}
+
+.cp-text-btn {
+    font-size: 12px;
+    color: $muted;
+    padding: 5px 9px;
+    border-radius: 8px;
+    transition: 150ms ease;
+
+    &:hover {
+        color: $fg;
+        background: $card-hover;
+    }
+}
+
+.cp-empty-state {
+    padding: 24px 0;
+}
+
+.cp-empty-icon {
+    font-size: 30px;
+    color: rgba(255, 255, 255, 0.12);
+    margin-bottom: 8px;
+}
+
+.cp-empty-text {
+    font-size: 12px;
+    color: $muted;
+}
+
+.cp-badge {
+    font-size: 10px;
+    font-weight: 600;
+    color: $fg-mid;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 3px 8px;
+
+    &.awake {
+        color: #ffd479;
+        background: rgba(224, 175, 104, 0.16);
+    }
+
+    &.alert {
+        color: $red;
+        background: rgba(247, 118, 142, 0.16);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIDEBAR — novos blocos
+// ═══════════════════════════════════════════════════════════
+.sidebar-battery {
+    background: $card;
+    border-radius: 999px;
+    padding: 5px 12px 5px 10px;
+
+    &.charging { background: rgba(158, 206, 106, 0.16); }
+    &.low { background: rgba(224, 175, 104, 0.16); }
+    &.critical { background: rgba(247, 118, 142, 0.18); }
+}
+
+.sidebar-battery-icon {
+    font-size: 15px;
+    color: $fg-mid;
+    margin-right: 7px;
+
+    .charging & { color: $green; }
+    .low & { color: $yellow; }
+    .critical & { color: $red; }
+}
+
+.sidebar-battery-pct {
+    font-size: 12px;
+    font-weight: 600;
+    color: $fg;
+}
+
+.sidebar-utils {
+    padding: 2px 2px 10px;
+}
+
+.sidebar-power-profile {
+    .segment { padding: 4px 9px; }
+}
+
+.sidebar-profile-icon {
+    font-size: 14px;
+}
+
+.qs-toggle-chevron {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.2);
+    margin-right: 2px;
+}
+
+// contador de notificações dentro do segmented
+.segment-badge {
+    font-size: 9px;
+    font-weight: 700;
+    color: $fg;
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    padding: 1px 5px;
+    margin-left: 5px;
+}
+
+// abas da sidebar: rótulos de larguras bem diferentes, então padding
+// menor pra caber "Notificações" + badge sem esticar o painel
+.sidebar-segmented .segment {
+    padding: 4px 8px;
+}
+
+// ── Sliders fixos (volume + brilho) ─────────────────────────
+.qs-sliders {
+    padding: 8px 2px 10px;
+}
+
+.qs-slider-row {
+    padding: 3px 0;
+}
+
+.qs-slider-icon {
+    font-size: 15px;
+    color: $fg-mid;
+    min-width: 30px;
+    padding: 4px 0;
+    border-radius: 8px;
+    transition: 150ms ease;
+
+    &:hover {
+        color: $fg;
+        background: $card-hover;
+    }
+}
+
+.qs-slider {
+    margin: 0 10px;
+
+    trough {
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        min-height: 6px;
+    }
+
+    highlight {
+        background: $fg-mid;
+        border-radius: 999px;
+        min-height: 6px;
+    }
+
+    slider {
+        background: #ffffff;
+        border-radius: 50%;
+        min-width: 14px;
+        min-height: 14px;
+        margin: -5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.qs-slider-value {
+    font-size: 11px;
+    color: $muted;
+    min-width: 34px;
+}
+
+// ── Empty state rico ────────────────────────────────────────
+.sidebar-empty-state {
+    padding: 44px 0;
+}
+
+.sidebar-empty-icon {
+    font-size: 34px;
+    color: rgba(255, 255, 255, 0.13);
+    margin-bottom: 12px;
+}
+
+.sidebar-empty-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: $fg-mid;
+    margin-bottom: 3px;
+}
+
+.sidebar-empty-sub {
+    font-size: 12px;
+    color: $muted;
+    margin-bottom: 10px;
+}
+
+// ── Notificações agrupadas por app ──────────────────────────
+.notif-group {
+    margin-bottom: 6px;
+}
+
+.notif-group-header {
+    padding: 4px 8px 4px 6px;
+    margin-bottom: 2px;
+}
+
+.notif-group-icon {
+    font-size: 12px;
+    color: $muted;
+    margin-right: 7px;
+}
+
+.notif-group-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: $fg-mid;
+}
+
+.notif-group-count {
+    font-size: 9px;
+    font-weight: 700;
+    color: $muted;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    padding: 1px 6px;
+    margin-left: 7px;
+}
+
+.notif-group-clear {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+    padding: 3px 7px;
+    border-radius: 7px;
+    transition: 150ms ease;
+
+    &:hover {
+        color: $red;
+        background: rgba(247, 118, 142, 0.12);
+    }
+}
+
+.notif-more {
+    font-size: 11px;
+    color: $muted;
+    padding: 6px 10px;
+    margin: 2px 0 4px;
+    border-radius: 9px;
+    transition: 150ms ease;
+
+    &:hover {
+        color: $fg-mid;
+        background: $card-hover;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MINI PLAYER (sidebar + Home)
+// ═══════════════════════════════════════════════════════════
+
+
+
+
+
+
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════
+// HOME — grid de 3 colunas
+// ═══════════════════════════════════════════════════════════
+.cp-home {
+    padding: 0 4px 4px;
+}
+
+.cp-home-grid {
+    margin-bottom: 12px;
+}
+
+.cp-col {
+    margin-right: 12px;
+
+    &:last-child { margin-right: 0; }
+}
+
+// sem min-width: o `homogeneous` do grid reparte os 980px em duas metades
+
+// ── Relógio ─────────────────────────────────────────────────
+.cp-clock-card {
+    padding: 14px 16px 12px;
+    margin-bottom: 10px;
+}
+
+.cp-clock-time {
+    font-size: 54px;
+    font-weight: 300;
+    color: $fg;
+    // a fonte variável abre demais nos dígitos grandes
+    letter-spacing: -2px;
+}
+
+.cp-clock-seconds {
+    font-size: 15px;
+    font-weight: 500;
+    color: $muted;
+    margin: 0 0 11px 5px;
+}
+
+.cp-clock-date {
+    font-size: 12px;
+    color: $muted;
+    margin-top: 2px;
+}
+
+// ── Clima ───────────────────────────────────────────────────
+.cp-weather-card {
+    padding: 14px 16px;
+}
+
+.cp-weather-now {
+    margin-bottom: 8px;
+}
+
+.cp-weather-icon {
+    font-size: 40px;
+    color: $accent;
+    margin-right: 14px;
+}
+
+.cp-weather-temp {
+    font-size: 30px;
+    font-weight: 300;
+    color: $fg;
+    letter-spacing: -1px;
+}
+
+.cp-weather-feels {
+    font-size: 11px;
+    color: $muted;
+    margin: 0 0 7px 8px;
+}
+
+.cp-weather-desc {
+    font-size: 12px;
+    color: $fg-mid;
+    margin-top: 1px;
+}
+
+.cp-weather-city-btn {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.22);
+    padding: 4px 6px;
+    border-radius: 8px;
+    transition: 150ms ease;
+
+    &:hover {
+        color: $fg-mid;
+        background: $card-hover;
+    }
+}
+
+.cp-weather-meta-row {
+    padding: 6px 0 2px;
+}
+
+.cp-weather-meta-icon {
+    font-size: 12px;
+    color: $muted;
+    margin-right: 5px;
+}
+
+.cp-weather-meta {
+    font-size: 11px;
+    color: $fg-dim;
+}
+
+.cp-weather-hours {
+    padding: 8px 0 2px;
+}
+
+.cp-weather-hour {
+    padding: 2px 0;
+}
+
+.cp-weather-hour-label {
+    font-size: 10px;
+    color: $muted;
+}
+
+.cp-weather-hour-icon {
+    font-size: 20px;
+    color: $fg-mid;
+    margin: 4px 0 3px;
+}
+
+.cp-weather-hour-temp {
+    font-size: 13px;
+    font-weight: 600;
+    color: $fg;
+}
+
+.cp-weather-hour-rain {
+    font-size: 9px;
+    color: $cyan;
+    margin-top: 1px;
+}
+
+.cp-weather-days {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $separator;
+}
+
+.cp-weather-day {
+    padding: 5px 0;
+}
+
+.cp-weather-day-name {
+    font-size: 12px;
+    color: $fg-mid;
+}
+
+.cp-weather-day-rain {
+    font-size: 10px;
+    color: $cyan;
+    margin-right: 8px;
+}
+
+.cp-weather-day-icon {
+    font-size: 14px;
+    color: $fg-mid;
+    margin-right: 10px;
+}
+
+.cp-weather-day-max {
+    font-size: 12px;
+    font-weight: 600;
+    color: $fg;
+    min-width: 30px;
+}
+
+.cp-weather-day-min {
+    font-size: 12px;
+    color: $muted;
+    min-width: 30px;
+}
+
+.cp-weather-stale {
+    font-size: 10px;
+    color: $yellow;
+    margin-top: 6px;
+}
+
+// ── Notas ───────────────────────────────────────────────────
+
+
+
+// ── Calendário ──────────────────────────────────────────────
+.cp-calendar-card {
+    padding: 14px 14px 12px;
+    margin-bottom: 10px;
+}
+
+.cp-cal-header {
+    margin-bottom: 6px;
+
+    .cp-card-title {
+        margin-bottom: 0;
+        // o mês é o título do cartão: capitaliza sem mexer no texto
+        font-size: 13px;
+        color: $fg;
+    }
+}
+
+.cp-cal-weekday {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.22);
+    padding: 3px 0 5px;
+}
+
+// A célula precisa ser QUADRADA por CSS: o label tem halign/valign CENTER,
+// então sem min-width ele encolhe pra largura do texto — e o realce do dia
+// virava uma pílula alta e estreita ("8" é bem mais estreito que a altura).
+.cp-cal-day {
+    font-size: 14px;
+    color: $fg-mid;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 14px;
+
+    &.today {
+        color: #ffffff;
+        font-weight: 700;
+        background: $accent;
+    }
+}
+
+// ── Mídia ociosa na Home ────────────────────────────────────
+
+
+// ── Rodapé: sliders + apps ──────────────────────────────────
+.cp-home-footer {
+    padding-top: 10px;
+    border-top: 1px solid $separator;
+}
+
+.cp-dual-sliders {
+    .cp-slider-row {
+        padding: 0 18px 0 0;
+    }
+}
+
+.cp-slider-icon-btn {
+    padding: 2px 4px;
+    border-radius: 8px;
+    transition: 150ms ease;
+
+    &:hover { background: $card-hover; }
+}
+
+.cp-apps {
+    margin-left: 10px;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA — cartões com histórico
+// ═══════════════════════════════════════════════════════════
+.cp-sistema {
+    padding: 4px 4px 8px;
+}
+
+.cp-stats-row {
+    margin-bottom: 10px;
+}
+
+.cp-stat {
+    padding: 12px 14px 10px;
+    margin-right: 10px;
+
+    &:last-child { margin-right: 0; }
+}
+
+.cp-stat-icon {
+    font-size: 13px;
+    color: $muted;
+    margin-right: 7px;
+}
+
+.cp-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: $muted;
+}
+
+.cp-stat-value {
+    font-size: 24px;
+    font-weight: 300;
+    color: $fg;
+    letter-spacing: -1px;
+    margin-top: 4px;
+}
+
+.cp-stat-sub {
+    font-size: 10px;
+    color: $fg-dim;
+    margin-bottom: 6px;
+}
+
+.sparkline {
+    margin-top: 4px;
+}
+
+// ── Núcleos ─────────────────────────────────────────────────
+.cp-cores {
+    padding: 12px 14px 10px;
+    margin-bottom: 10px;
+}
+
+.barchart {
+    margin-top: 2px;
+}
+
+// ── Duas colunas ────────────────────────────────────────────
+.cp-two-col {
+    .cp-card { margin-bottom: 10px; }
+}
+
+// ── Processos ───────────────────────────────────────────────
+.cp-card {
+    // os cartões da aba Sistema respiram mais que os do iOS-settings
+    &.cp-procs,
+    &.cp-cores,
+    &.cp-stat { padding: 12px 14px 10px; }
+}
+
+.cp-procs-header {
+    margin-bottom: 8px;
+
+    .cp-card-title { margin-bottom: 0; }
+}
+
+.cp-proc-row {
+    padding: 4px 2px;
+    border-radius: 8px;
+    transition: 120ms ease;
+
+    &:hover { background: rgba(255, 255, 255, 0.04); }
+}
+
+.cp-proc-name {
+    font-size: 12px;
+    color: $fg;
+}
+
+.cp-proc-pid {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.22);
+    margin-right: 10px;
+}
+
+.cp-proc-val {
+    font-size: 11px;
+    font-weight: 600;
+    color: $fg-mid;
+    min-width: 42px;
+}
+
+.cp-proc-kill {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.2);
+    padding: 3px 6px;
+    border-radius: 7px;
+    transition: 150ms ease;
+
+    &:hover {
+        color: $red;
+        background: rgba(247, 118, 142, 0.12);
+    }
+}
+
+// ── NixOS ───────────────────────────────────────────────────
+.cp-nix-actions {
+    margin-top: 10px;
+}
+
+// ── Mídia: shuffle/loop + volume do player ──────────────────
+.cp-ctrl-small {
+    font-size: 14px;
+    color: $muted;
+
+    &.active { color: $accent; }
+}
+
+
+// ── Stacks: o clip do slide não pode vazar ──────────────────
+.cp-stack,
+.sidebar-stack {
+    background: transparent;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ABA MÍDIA — palco único (saiu da sidebar e da Home)
+// ═══════════════════════════════════════════════════════════
+// O fundo vem por `css=` no TSX (capa esticada sob dois véus), então aqui
+// só entram forma e espaçamento.
+.cp-stage {
+    // cor de base pra quando a faixa não tem capa (aí o css= do TSX
+    // não injeta background-image nenhum e sobraria transparente)
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 18px;
+    padding: 26px 24px 18px;
+}
+
+.cp-stage-main {
+    margin-bottom: 6px;
+}
+
+// slot de tamanho fixo; a imagem se centraliza dentro
+.cp-stage-art-slot {
+    background: transparent;
+}
+
+.cp-stage-art {
+    border-radius: 16px;
+    background-color: rgba(255, 255, 255, 0.05);
+    // O raio do borrão é caro: o GTK3 refaz o blur em software a cada quadro.
+    // Esta sombra já foi `0 18px 48px` e sozinha custava 8ms por quadro — com
+    // 6ms de orçamento a 165Hz, era o motivo de a aba Mídia parecer travada.
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.45);
+}
+
+.cp-stage-art-fallback {
+    font-size: 60px;
+    color: rgba(255, 255, 255, 0.14);
+}
+
+.cp-stage-info {
+    margin-left: 30px;
+}
+
+// ── linha da origem ─────────────────────────────────────────
+.cp-stage-source {
+    margin-bottom: 12px;
+}
+
+.cp-stage-source-icon {
+    font-size: 14px;
+    color: $accent;
+    margin-right: 7px;
+}
+
+.cp-stage-source-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: $fg-mid;
+    margin-right: 9px;
+}
+
+.cp-stage-state {
+    font-size: 10px;
+    font-weight: 600;
+    color: $muted;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 999px;
+    padding: 2px 9px;
+
+    &.playing {
+        color: $green;
+        background: rgba(158, 206, 106, 0.16);
+    }
+}
+
+.cp-stage-mini {
+    font-size: 13px;
+    color: $fg-mid;
+    background: $card;
+    padding: 6px 9px;
+    margin-left: 6px;
+    border-radius: 9px;
+    transition: 150ms ease;
+
+    &:hover {
+        background: $card-hover;
+        color: $fg;
+    }
+
+    &.danger:hover {
+        background: rgba(247, 118, 142, 0.15);
+        color: $red;
+    }
+}
+
+// ── metadados ───────────────────────────────────────────────
+.cp-stage-title {
+    font-size: 25px;
+    font-weight: 600;
+    color: $fg;
+    letter-spacing: -0.4px;
+}
+
+.cp-stage-artist {
+    font-size: 15px;
+    color: $fg-mid;
+    margin-top: 4px;
+}
+
+.cp-stage-album {
+    font-size: 12px;
+    color: $muted;
+    margin-top: 2px;
+}
+
+// ── progresso ───────────────────────────────────────────────
+.cp-stage-progress {
+    margin: 18px 0 4px;
+}
+
+.cp-stage-noprogress {
+    font-size: 11px;
+    color: rgba(192, 202, 245, 0.35);
+    margin: 18px 0 10px;
+}
+
+// ── transporte ──────────────────────────────────────────────
+.cp-stage-controls {
+    margin: 6px 0 4px;
+}
+
+.cp-ctrl-seek {
+    font-size: 15px;
+    color: $fg-mid;
+}
+
+// ── volume + velocidade ─────────────────────────────────────
+.cp-stage-volume {
+    margin-top: 12px;
+}
+
+.cp-speed-btn {
+    font-size: 11px;
+    font-weight: 600;
+    color: $accent;
+    background: rgba(122, 162, 247, 0.14);
+    padding: 5px 11px;
+    margin: 0 0 0 12px;
+    border-radius: 9px;
+}
+
+// ── letra ───────────────────────────────────────────────────
+.cp-stage-lyrics-row {
+    margin-top: 10px;
+}
+
+.cp-lyrics {
+    margin-top: 6px;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+}
+
+.cp-lyrics-text {
+    font-size: 13px;
+    color: $fg-mid;
+}
+
+// ── troca de player ─────────────────────────────────────────
+.cp-stage-players {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid $separator;
+}
+
+.cp-player-chip {
+    font-size: 12px;
+    color: $fg-mid;
+    background: $card;
+    padding: 7px 14px;
+    margin: 0 5px;
+    border-radius: 999px;
+    transition: 150ms ease;
+
+    &:hover {
+        background: $card-hover;
+        color: $fg;
+    }
+}
+
+.cp-player-chip-dot {
+    font-size: 10px;
+    color: $accent;
+    margin-left: 9px;
+}
+
+.cp-player-chip-sub {
+    font-size: 10px;
+    color: $muted;
+    margin-top: 1px;
+}
+
+// ── dicas de teclado ────────────────────────────────────────
+.cp-stage-hints {
+    margin-top: 12px;
+}
+
+.cp-hint-key {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 10px;
+    color: $fg-mid;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    padding: 2px 7px;
+    margin-right: 6px;
+}
+
+.cp-hint-text {
+    font-size: 11px;
+    color: $muted;
+    margin-right: 16px;
+}
+
+// ── vazio ───────────────────────────────────────────────────
+.cp-media-empty-actions {
+    margin-top: 16px;
 }

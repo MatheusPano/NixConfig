@@ -4,18 +4,16 @@ import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import Wp from "gi://AstalWp"
 import Mpris from "gi://AstalMpris"
-import Notifd from "gi://AstalNotifd"
 import Bluetooth from "gi://AstalBluetooth"
 import { calendarVisible } from "./CalendarPopup"
 import { mediaVisible } from "./MediaPopup"
-import { readFile, stripHtml } from "../lib/utils"
-import { getNerdIcon } from "../lib/notifIcons"
+import { readFile } from "../lib/utils"
 
 // ── Estado da ilha ───────────────────────────────────────────
 // Um evento por vez; o mais novo substitui o anterior e o timer
 // devolve a ilha pro estado ocioso (data e hora por extenso).
 type IslandEvent = {
-    kind: "volume" | "mic" | "brightness" | "media" | "notif" | "bt"
+    kind: "volume" | "mic" | "brightness" | "media" | "bt"
     icon: string
     text: string
     value: number | null // 0..1 → mostra a barrinha
@@ -122,20 +120,8 @@ function watchMedia() {
     mpris.connect("player-added", (_: any, p: any) => hook(p))
 }
 
-function watchNotifications() {
-    const notifd = Notifd.get_default()
-    notifd.connect("notified", (_: any, id: number) => {
-        if (notifd.get_dont_disturb()) return
-        const n = notifd.get_notification(id)
-        if (!n) return
-        trigger({
-            kind: "notif",
-            icon: getNerdIcon(n) || "󰂚",
-            text: stripHtml(n.get_summary() || "Notificação"),
-            value: null,
-        })
-    })
-}
+// notificações não passam mais pela ilha: elas têm cápsula própria
+// logo abaixo da barra (NotificationPopups.tsx)
 
 function watchBluetooth() {
     const bt = Bluetooth.get_default()
@@ -157,7 +143,6 @@ function watchBluetooth() {
 watchAudio()
 watchBrightness()
 watchMedia()
-watchNotifications()
 watchBluetooth()
 
 // ── Data e hora por extenso (estado ocioso) ──────────────────

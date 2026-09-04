@@ -10,13 +10,29 @@ import { readState, writeState } from "./utils"
 // Cor primária: elementos ativos/selecionados (workspace focado, accents)
 // Cor secundária: workspaces ocupados e realces menores
 export type MainColor = "dark" | "cream"
-export type AccentMode = "default" | "wallpaper" | "terra"
+// "default" | "wallpaper" | um hex ("#9ece6a") escolhido na paleta
+export type AccentMode = string
 // Barra do topo: ilhas separadas (3 pills) ou contínua (funde com a moldura)
 export type BarMode = "islands" | "full"
 
 export const DEFAULT_ACCENT = "#7aa2f7"
 export const TERRA = "#8a4732"
 export const CREAM = "#f3ede2"
+
+// Paleta de acentos. Os hex são Tokyo Night, que é o tema do resto do
+// sistema (ghostty, nvim) — ver [[terminal-stack]]. "terra" ficou como id
+// legado porque já está gravado no theme.json de quem escolheu marrom.
+export const ACCENT_SWATCHES: { id: AccentMode, color: string, label: string, icon?: string }[] = [
+    { id: "default", color: DEFAULT_ACCENT, label: "Azul (padrão)" },
+    { id: "wallpaper", color: "#2a2a3a", label: "Cores do wallpaper", icon: "󰸉" },
+    { id: "terra", color: TERRA, label: "Marrom" },
+    { id: "#7dcfff", color: "#7dcfff", label: "Ciano" },
+    { id: "#9ece6a", color: "#9ece6a", label: "Verde" },
+    { id: "#bb9af7", color: "#bb9af7", label: "Roxo" },
+    { id: "#f7768e", color: "#f7768e", label: "Rosa" },
+    { id: "#ff9e64", color: "#ff9e64", label: "Laranja" },
+    { id: "#e0af68", color: "#e0af68", label: "Âmbar" },
+]
 
 // migração dos estados antigos (palette.json { enabled } / theme.accent)
 const legacy = readState("palette", { enabled: false })
@@ -35,6 +51,64 @@ export const secondaryColor = Variable(DEFAULT_ACCENT)
 // pra posicionar a sombra interna no modo contínuo
 export const barHeight = Variable(0)
 
+// ── Aparência das janelas (Hyprland em runtime) ──────────────
+// Os presets espelham o que está no hyprland.conf: o "normal"/"suave"/"ligado"
+// de cada linha É o valor do arquivo, então quem nunca mexeu vê a UI batendo
+// com o sistema. Nada disso escreve no .conf (ele vem do nix, é read-only) —
+// aplica por `hyprctl keyword` e regrava na subida do AGS.
+export type Roundness = "sharp" | "soft" | "round"
+export type Density = "tight" | "normal" | "loose"
+export type BlurMode = "off" | "light" | "full"
+
+const ROUNDING: Record<Roundness, string> = { sharp: "0", soft: "10", round: "18" }
+// `zen` é o vão simétrico do modo zen: sem barra, o topo fica igual aos lados
+const GAPS: Record<Density, { in: string, out: string, zen: string }> = {
+    tight: { in: "4", out: "4,8,8,8", zen: "8" },
+    normal: { in: "10", out: "10,16,16,16", zen: "16" },
+    loose: { in: "16", out: "16,24,24,24", zen: "24" },
+}
+
+// O modo zen também mexe em gaps_out. Ele lê o preset daqui em vez de fixar
+// "10,16,16,16": o initZen roda 3s depois da subida e apagava a escolha de
+// espaçamento que o applyWindowLook tinha acabado de aplicar.
+export function gapsOutFor(zen: boolean): string {
+    const g = GAPS[density.get()] ?? GAPS.normal
+    return zen ? g.zen : g.out
+}
+const BLUR: Record<BlurMode, { on: string, size: string, passes: string }> = {
+    off: { on: "0", size: "6", passes: "2" },
+    // 4/1 corta pela metade o custo de cada quadro na iGPU
+    light: { on: "1", size: "4", passes: "1" },
+    full: { on: "1", size: "6", passes: "2" },
+}
+
+export const roundness = Variable<Roundness>(saved.rounding ?? "soft")
+export const density = Variable<Density>(saved.gaps ?? "normal")
+export const blurMode = Variable<BlurMode>(saved.blur ?? "full")
+export const shadowsOn = Variable<boolean>(saved.shadows ?? true)
+export const animationsOn = Variable<boolean>(saved.animations ?? true)
+
+function applyWindowLook() {
+    const g = GAPS[density.get()] ?? GAPS.normal
+    const b = BLUR[blurMode.get()] ?? BLUR.full
+    // um batch só: cinco `hyprctl` separados são cinco processos por clique
+    const batch = [
+        `keyword decoration:rounding ${ROUNDING[roundness.get()] ?? "10"}`,
+        `keyword general:gaps_in ${g.in}`,
+        `keyword general:gaps_out ${g.out}`,
+        `keyword decoration:blur:enabled ${b.on}`,
+        `keyword decoration:blur:size ${b.size}`,
+        `keyword decoration:blur:passes ${b.passes}`,
+        // `range` junto: desligar a sombra zera o range no Hyprland e ele NÃO
+        // volta sozinho — religar só o `enabled` deixava uma sombra de raio 0,
+        // ou seja, sombra nenhuma. 24 é o valor do hyprland.conf.
+        `keyword decoration:shadow:enabled ${shadowsOn.get() ? 1 : 0}`,
+        `keyword decoration:shadow:range ${shadowsOn.get() ? 24 : 0}`,
+        `keyword animations:enabled ${animationsOn.get() ? 1 : 0}`,
+    ].join(" ; ")
+    execAsync(["hyprctl", "--batch", batch]).catch(() => { })
+}
+
 function persist() {
     writeState("theme", {
         main: mainColor.get(),
@@ -42,6 +116,11 @@ function persist() {
         secondary: secondaryMode.get(),
         borders: bordersOn.get(),
         bar: barMode.get(),
+        rounding: roundness.get(),
+        gaps: density.get(),
+        blur: blurMode.get(),
+        shadows: shadowsOn.get(),
+        animations: animationsOn.get(),
     })
 }
 
@@ -153,6 +232,22 @@ function extractAccent(path: string): string {
     }
 }
 
+// Cor dominante de uma imagem qualquer (capa de álbum, por exemplo) pro
+// fundo ambiente da aba Mídia. Cache por caminho: o AstalMpris reemite
+// notify::cover-art com o mesmo arquivo várias vezes por faixa.
+const dominantCache = new Map<string, string>()
+
+export function dominantColorOf(path: string): string {
+    if (!path) return DEFAULT_ACCENT
+    const hit = dominantCache.get(path)
+    if (hit) return hit
+    const color = extractAccent(path)
+    // o cache não pode crescer sem fim numa sessão longa de música
+    if (dominantCache.size > 60) dominantCache.clear()
+    dominantCache.set(path, color)
+    return color
+}
+
 // ── Override: cor principal creme (só neutros; accent à parte) ──
 const INK = "#453527"
 const INK_MID = "rgba(69, 53, 39, 0.72)"
@@ -194,17 +289,6 @@ const creamCss = `
 .cp-weather-edit { background: ${CARD}; }
 .cp-weather-entry { background: rgba(90, 66, 48, 0.1); color: ${INK}; caret-color: ${INK}; }
 .cp-app-btn { background: ${CARD}; color: ${INK_MID}; }
-.cp-todos { background: ${CARD}; }
-.cp-todo-entry { background: rgba(90, 66, 48, 0.1); color: ${INK}; caret-color: ${INK}; }
-.cp-todo-add { background: rgba(90, 66, 48, 0.1); color: ${INK_MID}; }
-.cp-todo-add:hover { background: ${CARD_HOVER}; color: ${INK}; }
-.cp-todo-row:hover { background: rgba(90, 66, 48, 0.06); }
-.cp-todo-check { color: ${INK_MUTED}; }
-.cp-todo-check:hover { color: ${INK}; }
-.cp-todo-text { color: ${INK}; }
-.cp-todo-text.done { color: ${INK_MUTED}; }
-.cp-todo-empty { color: ${INK_MUTED}; }
-.cp-todo-del { color: rgba(69, 53, 39, 0.3); }
 .cp-slider-icon { color: ${INK_MID}; }
 .cp-slider trough { background: rgba(90, 66, 48, 0.14); }
 .cp-slider trough highlight { background: ${INK_MID}; }
@@ -215,35 +299,16 @@ const creamCss = `
 .cp-info-value { color: ${INK}; }
 .cp-levelbar trough { background: rgba(90, 66, 48, 0.14); }
 .cp-level-value { color: ${INK}; }
-.cp-separator { background: rgba(69, 53, 39, 0.1); }
 .cp-profile-btn { background: ${CARD}; color: ${INK_MID}; }
 .cp-profile-btn:hover { background: ${CARD_HOVER}; color: ${INK}; }
-.cp-mt-title { color: ${INK}; }
-.cp-mt-album { color: ${INK_MUTED}; }
-.cp-mt-artist { color: ${INK_MID}; }
 .cp-ctrl-btn { color: ${INK}; }
 .cp-ctrl-btn:hover { background: rgba(90, 66, 48, 0.1); }
 .cp-ctrl-btn:disabled { color: rgba(69, 53, 39, 0.25); }
 .cp-progress-bar trough { background: rgba(90, 66, 48, 0.16); }
 .cp-progress-bar slider { background: ${INK}; }
 .cp-time-label { color: ${INK_MUTED}; }
-.cp-mt-art { background: rgba(90, 66, 48, 0.1); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
-.cp-mt-art-fallback { color: rgba(69, 53, 39, 0.25); }
-.cp-mt-chip { background: rgba(90, 66, 48, 0.1); }
-.cp-mt-chip-name { color: ${INK}; }
-.cp-mt-chip-swap { color: ${INK_MUTED}; }
-.cp-mt-mini { background: ${CARD}; color: ${INK_MID}; }
-.cp-mt-mini:hover { background: ${CARD_HOVER}; color: ${INK}; }
-.cp-mt-kill:hover { background: rgba(200, 60, 60, 0.15); color: #b03a2e; }
-.cp-mt-menu { background: #efe7d8; border: 1px solid rgba(69, 53, 39, 0.18); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3); }
-.cp-mt-menu-item:hover { background: rgba(90, 66, 48, 0.1); }
 .cp-media-empty .cp-media-empty-icon { color: rgba(69, 53, 39, 0.2); }
 .cp-media-empty .cp-media-empty-text { color: ${INK_MUTED}; }
-.cp-wp-title { color: ${INK}; }
-.cp-wp-refresh-btn, .cp-wp-folder-btn { background: ${CARD}; color: ${INK_MID}; }
-.cp-wp-refresh-btn:hover, .cp-wp-folder-btn:hover { background: ${CARD_HOVER}; color: ${INK}; }
-.cp-option-toggle { background: ${CARD}; color: ${INK_MID}; }
-.cp-option-toggle:hover { background: ${CARD_HOVER}; color: ${INK}; }
 .cp-wp-item:hover { border-color: rgba(69, 53, 39, 0.3); }
 .cp-accent-chip { border-color: rgba(69, 53, 39, 0.3); }
 .cp-pers-section { color: ${INK_MUTED}; }
@@ -294,6 +359,13 @@ const creamCss = `
 .sidebar-notif-dismiss { color: ${INK_MUTED}; }
 .sidebar-notif-icon-wrap { background: rgba(90, 66, 48, 0.1); }
 .sidebar-notif-action { background: ${CARD}; color: ${INK_MID}; }
+.notif-capsule { background: ${CREAM}; border-color: rgba(69, 53, 39, 0.16); }
+.notif-orb { background: rgba(90, 66, 48, 0.1); }
+.notif-orb-img { background-color: rgba(90, 66, 48, 0.1); }
+.notif-capsule-app { color: ${INK_MUTED}; }
+.notif-capsule-time { color: rgba(69, 53, 39, 0.35); }
+.notif-capsule-title { color: ${INK}; }
+.notif-capsule-body { color: ${INK_MID}; }
 .sidebar-slider-icon { color: ${INK_MID}; }
 .sidebar-slider trough { background: rgba(90, 66, 48, 0.14); }
 .sidebar-slider trough highlight { background: ${INK_MID}; }
@@ -329,6 +401,103 @@ const creamCss = `
 .clip-meta, .clip-empty-text { color: ${INK_MUTED}; }
 .clip-del { color: ${INK_MUTED}; }
 .clip-empty-icon { color: rgba(69, 53, 39, 0.2); }
+
+/* ── Reforma 2026-08-08: sidebar densa + Home em 3 colunas ── */
+.cp-card-title { color: ${INK_MID}; }
+.cp-icon-btn, .cp-text-btn { color: ${INK_MUTED}; }
+.cp-icon-btn:hover, .cp-text-btn:hover { background: ${CARD_HOVER}; color: ${INK}; }
+.cp-chip-btn { background: ${CARD}; color: ${INK_MID}; }
+.cp-chip-btn:hover { background: ${CARD_HOVER}; color: ${INK}; }
+.cp-empty-icon { color: rgba(69, 53, 39, 0.18); }
+.cp-empty-text { color: ${INK_MUTED}; }
+.cp-badge { background: rgba(90, 66, 48, 0.12); color: ${INK_MID}; }
+.cp-badge.awake { background: rgba(163, 116, 44, 0.18); color: #8a5f16; }
+.cp-badge.alert { background: rgba(176, 58, 46, 0.15); color: #b03a2e; }
+
+.sidebar-battery { background: ${CARD}; }
+.sidebar-battery.charging { background: rgba(85, 125, 47, 0.18); }
+.sidebar-battery.low { background: rgba(163, 116, 44, 0.18); }
+.sidebar-battery.critical { background: rgba(176, 58, 46, 0.16); }
+.sidebar-battery-icon { color: ${INK_MID}; }
+.sidebar-battery-pct { color: ${INK}; }
+.sidebar-battery.charging .sidebar-battery-icon { color: #557d2f; }
+.sidebar-battery.low .sidebar-battery-icon { color: #a3742c; }
+.sidebar-battery.critical .sidebar-battery-icon { color: #b03a2e; }
+.sidebar-profile-icon { color: ${INK_MID}; }
+.qs-toggle-chevron { color: rgba(69, 53, 39, 0.25); }
+.segment-badge { background: rgba(90, 66, 48, 0.16); color: ${INK}; }
+
+.qs-slider-icon { color: ${INK_MID}; }
+.qs-slider-icon:hover { background: ${CARD_HOVER}; color: ${INK}; }
+.qs-slider trough { background: rgba(90, 66, 48, 0.16); }
+.qs-slider highlight { background: ${INK_MID}; }
+.qs-slider slider { background: ${INK}; }
+.qs-slider-value { color: ${INK_MUTED}; }
+
+.sidebar-empty-icon { color: rgba(69, 53, 39, 0.18); }
+.sidebar-empty-title { color: ${INK_MID}; }
+.sidebar-empty-sub { color: ${INK_MUTED}; }
+.notif-group-icon, .notif-group-count { color: ${INK_MUTED}; }
+.notif-group-count { background: rgba(90, 66, 48, 0.12); }
+.notif-group-name { color: ${INK_MID}; }
+.notif-group-clear { color: rgba(69, 53, 39, 0.3); }
+.notif-group-clear:hover { color: #b03a2e; background: rgba(176, 58, 46, 0.12); }
+.notif-more { color: ${INK_MUTED}; }
+.notif-more:hover { color: ${INK}; background: ${CARD_HOVER}; }
+
+
+.cp-clock-time { color: ${INK}; }
+.cp-clock-seconds, .cp-clock-date { color: ${INK_MUTED}; }
+.cp-weather-feels { color: ${INK_MUTED}; }
+.cp-weather-city-btn { color: rgba(69, 53, 39, 0.28); }
+.cp-weather-city-btn:hover { color: ${INK_MID}; background: ${CARD_HOVER}; }
+.cp-weather-meta-icon { color: ${INK_MUTED}; }
+.cp-weather-meta { color: rgba(69, 53, 39, 0.5); }
+.cp-weather-hour-label { color: ${INK_MUTED}; }
+.cp-weather-hour-icon { color: ${INK_MID}; }
+.cp-weather-hour-temp { color: ${INK}; }
+.cp-weather-hour-rain, .cp-weather-day-rain { color: #22809c; }
+.cp-weather-days { border-top-color: rgba(69, 53, 39, 0.1); }
+.cp-weather-day-name, .cp-weather-day-icon { color: ${INK_MID}; }
+.cp-weather-day-max { color: ${INK}; }
+.cp-weather-day-min { color: ${INK_MUTED}; }
+.cp-weather-stale { color: #a3742c; }
+.cp-cal-weekday { color: rgba(69, 53, 39, 0.3); }
+.cp-cal-day { color: ${INK_MID}; }
+.cp-home-footer { border-top-color: rgba(69, 53, 39, 0.1); }
+.cp-slider-icon-btn:hover { background: ${CARD_HOVER}; }
+
+.cp-stat-icon, .cp-stat-label { color: ${INK_MUTED}; }
+.cp-stat-value { color: ${INK}; }
+.cp-stat-sub { color: rgba(69, 53, 39, 0.45); }
+.cp-proc-name { color: ${INK}; }
+.cp-proc-pid { color: rgba(69, 53, 39, 0.3); }
+.cp-proc-val { color: ${INK_MID}; }
+.cp-proc-row:hover { background: rgba(90, 66, 48, 0.06); }
+.cp-proc-kill { color: rgba(69, 53, 39, 0.28); }
+.cp-proc-kill:hover { color: #b03a2e; background: rgba(176, 58, 46, 0.12); }
+.cp-ctrl-small { color: ${INK_MUTED}; }
+
+/* ── Aba Mídia: palco único ── */
+.cp-stage-art { background-color: rgba(90, 66, 48, 0.1); box-shadow: 0 8px 14px rgba(0, 0, 0, 0.18); }
+.cp-stage-art-fallback { color: rgba(69, 53, 39, 0.22); }
+.cp-stage-source-name { color: ${INK_MID}; }
+.cp-stage-state { background: rgba(90, 66, 48, 0.12); color: ${INK_MUTED}; }
+.cp-stage-state.playing { background: rgba(85, 125, 47, 0.18); color: #46701f; }
+.cp-stage-mini { background: ${CARD}; color: ${INK_MID}; }
+.cp-stage-mini:hover { background: ${CARD_HOVER}; color: ${INK}; }
+.cp-stage-mini.danger:hover { background: rgba(176, 58, 46, 0.15); color: #b03a2e; }
+.cp-stage-title { color: ${INK}; }
+.cp-stage-artist { color: ${INK_MID}; }
+.cp-stage-album { color: ${INK_MUTED}; }
+.cp-stage-noprogress { color: rgba(69, 53, 39, 0.4); }
+.cp-player-chip { background: ${CARD}; color: ${INK_MID}; }
+.cp-player-chip:hover { background: ${CARD_HOVER}; color: ${INK}; }
+.cp-player-chip-sub { color: ${INK_MUTED}; }
+.cp-speed-btn { background: rgba(90, 66, 48, 0.12); color: ${INK}; }
+.cp-lyrics-text { color: ${INK_MID}; }
+.cp-hint-key { background: rgba(90, 66, 48, 0.12); color: ${INK_MID}; }
+.cp-hint-text { color: ${INK_MUTED}; }
 `
 
 // ── Override de accent ───────────────────────────────────────
@@ -344,6 +513,7 @@ function accentCss(hex: string): string {
     .island-app-icon { color: ${hex}; }
     .island-icon { color: ${hex}; }
     .sidebar-notif-nerd-icon { color: ${hex}; }
+    .notif-orb-icon { color: ${hex}; }
     .ws-dot:hover .dot-inner { background: ${a(0.5)}; }
     .calendar-title { color: ${hex}; }
     .calendar-wrap calendar:selected { background: ${hex}; }
@@ -363,22 +533,24 @@ function accentCss(hex: string): string {
     .cp-play-btn:hover { background: ${a(0.2)}; }
     .cp-progress-bar trough highlight { background: ${hex}; }
     .cp-wp-item.active { border-color: ${hex}; }
+    .cp-wp-check { background: ${hex}; }
     .cp-weather-icon { color: ${hex}; }
     .cp-app-btn:hover { background: ${a(0.15)}; color: ${hex}; }
-    .cp-todo-check.done { color: ${hex}; }
-    .cp-option-toggle.active { background: ${a(0.15)}; color: ${hex}; border-color: ${a(0.4)}; }
     .cp-profile-btn.active { background: ${a(0.15)}; color: ${hex}; }
     .cp-level-row levelbar block.filled { background: ${hex}; }
-    .cp-mt-chip-icon { color: ${hex}; }
-    .cp-mt-chip:hover { background: ${a(0.15)}; }
-    .cp-mt-menu-check { color: ${hex}; }
-    .cp-mt-menu-item.active { background: ${a(0.15)}; }
     .cp-swatch.active { border-color: ${hex}; }
     .qs-toggle-circle.active { background: ${hex}; }
     .sidebar-notif-action:hover { background: ${a(0.15)}; color: ${hex}; }
     .sidebar-wifi-connect { background: ${a(0.15)}; color: ${hex}; }
     .clip-item.selected { background: ${a(0.14)}; }
     .clip-item.selected .clip-text { color: ${hex}; }
+    .cp-cal-day.today { background: ${hex}; }
+    .cp-chip-btn:hover { background: ${a(0.15)}; color: ${hex}; }
+    .cp-ctrl-small.active { color: ${hex}; }
+    .cp-stage-source-icon { color: ${hex}; }
+    .cp-player-chip.active { background: ${a(0.16)}; color: ${hex}; }
+    .cp-player-chip-dot { color: ${hex}; }
+    .cp-speed-btn { color: ${hex}; background: ${a(0.14)}; }
     `
 }
 
@@ -390,13 +562,27 @@ function barCss(): string {
 }
 
 // ── Bordas das janelas (Hyprland) ────────────────────────────
+// A borda da janela ativa acompanha a cor primária do tema, então ela segue o
+// wallpaper junto com a barra. Antes o hyprland.conf fixava o ciano default do
+// Hyprland (33ccff), que não casava com nada do resto do sistema.
 function applyBorders() {
     execAsync(["hyprctl", "keyword", "general:border_size", bordersOn.get() ? "2" : "0"])
+        .catch(() => {})
+
+    const cream = mainColor.get() === "cream"
+    const active = primaryColor.get().replace("#", "")
+    execAsync(["hyprctl", "keyword", "general:col.active_border", `rgba(${active}ee)`])
+        .catch(() => {})
+    // inativa: neutro do tema, não uma versão apagada do accent (senão as duas
+    // bordas ficam parecidas e o foco deixa de ser óbvio)
+    const inactive = cream ? "rgba(c9bda666)" : "rgba(2a2a35aa)"
+    execAsync(["hyprctl", "keyword", "general:col.inactive_border", inactive])
         .catch(() => {})
 }
 
 // ── Aplicação / persistência ─────────────────────────────────
 function resolveMode(mode: AccentMode): string {
+    if (mode?.startsWith("#")) return mode
     switch (mode) {
         case "wallpaper": return extractAccent(currentWp.get())
         case "terra": return TERRA
@@ -441,6 +627,9 @@ function syncTheme() {
 
     App.apply_css(accentCss(primary), false)
     App.apply_css(workspaceCss(primary, secondary), false)
+
+    // primaryColor acabou de mudar: propaga pra borda do Hyprland
+    applyBorders()
 }
 
 export function initTheme() {
@@ -449,6 +638,8 @@ export function initTheme() {
     secondaryMode.subscribe(() => { persist(); syncTheme() })
     bordersOn.subscribe(() => { persist(); applyBorders() })
     barMode.subscribe(() => { persist(); syncTheme() })
+        ;[roundness, density, blurMode, shadowsOn, animationsOn]
+            .forEach((v: any) => v.subscribe(() => { persist(); applyWindowLook() }))
     currentWp.subscribe(() => {
         if (primaryMode.get() === "wallpaper" || secondaryMode.get() === "wallpaper")
             syncTheme()
@@ -457,8 +648,16 @@ export function initTheme() {
     if (mainColor.get() !== "dark" || primaryMode.get() !== "default"
         || secondaryMode.get() !== "default" || barMode.get() !== "islands")
         syncTheme()
-    // o start.sh dá `hyprctl reload` ~1s após o AGS subir, o que desfaz
-    // keywords; aplica as bordas depois disso
-    if (!bordersOn.get())
-        setTimeout(applyBorders, 3000)
+
+    // Sempre aplica na subida, inclusive no tema default: é o que troca o
+    // ciano do hyprland.conf pela cor do tema. O delay cobre o caso do
+    // compositor ainda estar subindo quando o serviço do AGS inicia.
+    setTimeout(applyBorders, 1500)
+
+    // A aparência das janelas só precisa ser reaplicada se alguém mexeu: sem
+    // isso a gente reescreveria por cima do hyprland.conf com os mesmos
+    // valores em toda subida, sem motivo.
+    if (roundness.get() !== "soft" || density.get() !== "normal"
+        || blurMode.get() !== "full" || !shadowsOn.get() || !animationsOn.get())
+        setTimeout(applyWindowLook, 1500)
 }

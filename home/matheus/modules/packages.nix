@@ -10,16 +10,18 @@ in
     # Navegadores e apps
     zen-browser
     google-chrome
-    spotify
+    # spotify agora vem do módulo spicetify/ (Spotify empacotado com spicetify)
     obsidian
     claude-desktop-fhs
     claude-code
 
     # Terminal e dev
-    ghostty
+    # ghostty agora vem do modules/ghostty/ (o modulo do home-manager instala o
+    # pacote junto da config; ter os dois colide)
     python3
     btop
     lazydocker
+    bruno # cliente HTTP / testes de API (tipo Postman)
 
     # Desktop (Hyprland)
     vicinae
@@ -30,6 +32,8 @@ in
     satty
     wl-clipboard
     cliphist # histórico de clipboard (aba Clip da sidebar AGS)
+    playerctl # teclas de mídia do notebook (os bindl do hyprland.conf chamam
+    # `playerctl next/play-pause/previous`; sem o pacote elas não faziam nada)
     hyprsunset # luz noturna (toggle na sidebar AGS)
     wf-recorder # gravação de tela (botão na sidebar AGS)
 
@@ -47,10 +51,17 @@ in
     astal.notifd
     astal.tray
 
+    # Visualizadores: nao havia NENHUM instalado, entao abrir um png/mp4 pelo
+    # Thunar nao fazia nada. Ambos estao mapeados em modules/xdg/default.nix.
+    loupe # imagens (GTK4/libadwaita, casa com o resto do desktop)
+    mpv # video/audio
+
     # Utilitarios
     pavucontrol
     overskride
-    nautilus
+    localsend # compartilhamento de arquivos na rede local (tipo AirDrop)
+    jq # usado no bind de print da janela ativa (hyprctl -j | jq)
+    # file manager GUI = Thunar (nixos/core/system.nix); TUI = yazi (modules/yazi)
 
     # Cursores extras (o principal, bibata, vem via home.pointerCursor)
     nordzy-cursor-theme

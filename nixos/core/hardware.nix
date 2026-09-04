@@ -21,4 +21,13 @@
 
   # Info de bateria via D-Bus (AstalBattery/AGS usa pra ser reativo).
   services.upower.enable = true;
+
+  # 15GB de RAM, zram e sem swap em disco: quando um build do Gradle/Android
+  # estoura a memoria, o OOM killer do kernel demora e a maquina congela por
+  # minutos. O earlyoom mata o processo culpado antes de chegar nesse ponto.
+  services.earlyoom = {
+    enable = true;
+    freeMemThreshold = 5; # age com <5% de RAM livre
+    freeSwapThreshold = 10;
+  };
 }

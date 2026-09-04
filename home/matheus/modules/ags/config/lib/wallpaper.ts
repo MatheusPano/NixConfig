@@ -58,7 +58,7 @@ export function randomWallpaper() {
 }
 
 export function openWallpaperFolder() {
-    execAsync(["nautilus", WALLPAPER_DIR]).catch(() =>
+    execAsync(["thunar", WALLPAPER_DIR]).catch(() =>
         execAsync(["xdg-open", WALLPAPER_DIR])
     )
 }

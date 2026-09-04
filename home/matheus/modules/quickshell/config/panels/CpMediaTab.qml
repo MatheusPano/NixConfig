@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
+import Quickshell.Widgets
 import "../services"
 import "../components"
 
@@ -224,6 +225,47 @@ Item {
             }
         }
 
+        // wash ambiente: a própria capa decodificada minúscula (32px) e
+        // esticada — o upscale bilinear faz o blur de graça, sem shader,
+        // e o scene graph guarda como textura (custo zero por frame)
+        ClippingRectangle {
+            anchors.fill: parent
+            radius: 16
+            color: "transparent"
+
+            Image {
+                anchors.fill: parent
+                source: root.artSource
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                sourceSize.width: 32
+                opacity: status === Image.Ready ? (Theme.cream ? 0.16 : 0.3) : 0
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 600
+                    }
+                }
+            }
+
+            // assenta a base pra legibilidade dos controles
+            Rectangle {
+                anchors.fill: parent
+
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.3
+                        color: "transparent"
+                    }
+
+                    GradientStop {
+                        position: 1
+                        color: Theme.cream ? Qt.rgba(1, 1, 1, 0.3) : Qt.rgba(0, 0, 0, 0.3)
+                    }
+                }
+            }
+        }
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
@@ -259,6 +301,13 @@ Item {
                             source: root.artSource
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
+                            opacity: status === Image.Ready ? 1 : 0
+
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 300
+                                }
+                            }
                         }
 
                         IconLabel {

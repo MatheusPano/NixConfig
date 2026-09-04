@@ -3,8 +3,8 @@ import QtQuick.Layouts
 import "../services"
 import "../components"
 
-// Painel central (Super+A): abas Home / Sistema / Personalização (+ Mídia
-// via `qs ipc call panel tab media`), formato fixo 980x580, conteúdo rola.
+// Painel central (Super+A): abas Home / Sistema / Mídia / Personalização,
+// formato fixo 980x580, conteúdo rola. A ilha abre direto na aba Mídia.
 PopupPanel {
     id: root
 
@@ -16,8 +16,7 @@ PopupPanel {
     implicitWidth: 980
     implicitHeight: 580
 
-    // mídia fora da rotação: mora na ilha
-    readonly property var tabIds: ["home", "sistema", "wallpaper"]
+    readonly property var tabIds: ["home", "sistema", "media", "wallpaper"]
 
     function cycleTab(dir) {
         const cur = tabIds.indexOf(Panels.cpTab);
@@ -53,6 +52,8 @@ PopupPanel {
         else if (event.key === Qt.Key_2)
             Panels.cpTab = "sistema";
         else if (event.key === Qt.Key_3)
+            Panels.cpTab = "media";
+        else if (event.key === Qt.Key_4)
             Panels.cpTab = "wallpaper";
         else
             return;
@@ -95,6 +96,7 @@ PopupPanel {
                     model: [
                         { id: "home", icon: "\u{F02DC}", label: "Home" },
                         { id: "sistema", icon: "\u{F0493}", label: "Sistema" },
+                        { id: "media", icon: "\u{F0386}", label: "Mídia" },
                         { id: "wallpaper", icon: "\u{F03D8}", label: "Personalização" },
                     ]
 

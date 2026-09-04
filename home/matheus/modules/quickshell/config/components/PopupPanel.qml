@@ -37,7 +37,7 @@ PanelWindow {
 
     Timer {
         id: closeDelay
-        interval: 280
+        interval: 320
     }
 
     HyprlandFocusGrab {
@@ -57,32 +57,37 @@ PanelWindow {
         Keys.onEscapePressed: root.dismissed()
         Keys.onPressed: event => root.keyPressed(event)
 
+        // Slide de verdade: o conteúdo vem inteiro de fora da tela com
+        // easing expressivo (OutExpo entra rápido e assenta suave), em vez
+        // do fade com deslizinho de antes.
         Item {
             id: contentSlot
             width: parent.width
             height: parent.height
-            x: root.slide === "right" ? (root.open ? 0 : 46) : 0
-            y: root.slide === "top" ? (root.open ? 0 : -34)
-                : root.slide === "bottom" ? (root.open ? 0 : 34) : 0
+            x: root.slide === "right" ? (root.open ? 0 : width + 60) : 0
+            y: root.slide === "top" ? (root.open ? 0 : -(height + 80))
+                : root.slide === "bottom" ? (root.open ? 0 : height + 80) : 0
             opacity: root.open ? 1 : 0
 
             Behavior on x {
                 NumberAnimation {
-                    duration: 260
-                    easing.type: Easing.OutCubic
+                    duration: root.open ? 450 : 300
+                    easing.type: root.open ? Easing.OutExpo : Easing.InCubic
                 }
             }
 
             Behavior on y {
                 NumberAnimation {
-                    duration: 260
-                    easing.type: Easing.OutCubic
+                    duration: root.open ? 450 : 300
+                    easing.type: root.open ? Easing.OutExpo : Easing.InCubic
                 }
             }
 
+            // o fade é só pra não deixar fantasma no fim do fechamento;
+            // na abertura o conteúdo já entra praticamente opaco
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 180
+                    duration: root.open ? 120 : 280
                 }
             }
         }

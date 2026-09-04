@@ -14,10 +14,18 @@ PopupPanel {
     onDismissed: Panels.qsOpen = false
     slide: "right"
 
+    // painel flutuante: descolado da moldura e abaixo da barra,
+    // cantos redondos por inteiro (estilo illogical-impulse)
     anchors {
         top: true
         bottom: true
         right: true
+    }
+
+    margins {
+        top: Panels.barHeight + 10
+        right: 14
+        bottom: 14
     }
 
     implicitWidth: 484
@@ -51,7 +59,9 @@ PopupPanel {
     Rectangle {
         anchors.fill: parent
         color: Theme.surface
-        bottomLeftRadius: 20
+        radius: 20
+        border.width: 1
+        border.color: Theme.separator
 
         ColumnLayout {
             anchors.fill: parent

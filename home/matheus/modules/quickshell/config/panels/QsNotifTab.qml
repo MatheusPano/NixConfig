@@ -308,6 +308,8 @@ ColumnLayout {
             Clickable {
                 visible: group.hidden > 0
                 Layout.fillWidth: true
+                // fixo: childrenRect + conteúdo centralizado + fillWidth = loop
+                implicitWidth: 120
                 implicitHeight: 24
                 radius: 8
 
@@ -324,6 +326,7 @@ ColumnLayout {
             Clickable {
                 visible: group.expanded && group.modelData.list.length > 2
                 Layout.fillWidth: true
+                implicitWidth: 120
                 implicitHeight: 24
                 radius: 8
 

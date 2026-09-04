@@ -4,17 +4,26 @@ import Quickshell.Wayland
 import "../services"
 import "../components"
 
-// Moldura da tela: janela click-through desenhando o retângulo externo menos
-// o interno arredondado, com sombra interna. No zen sobe pro overlay
-// ("fullscreen" com cantos redondos sobre tudo).
+// Moldura da tela v2: em vez de um Canvas gigante, 4 retângulos de borda +
+// 4 cantos côncavos pequenos + sombra interna em degradê de verdade.
+// Tudo com Behavior: trocar tema/modo da barra anima em vez de piscar.
+// No zen sobe pro overlay ("fullscreen" com cantos redondos sobre tudo).
 PanelWindow {
     id: root
 
     readonly property int frameWidth: 8
     // concêntrico com as janelas: rounding(10) + gap até a moldura
     readonly property int cornerRadius: 18
-    readonly property int shadowSteps: 6
-    readonly property real shadowAlpha: 0.05
+    readonly property int shadowSize: 22
+
+    // cor animada: os cantos repintam a cada frame da transição
+    property color frameColor: Theme.surface
+
+    Behavior on frameColor {
+        ColorAnimation {
+            duration: 300
+        }
+    }
 
     anchors {
         top: true
@@ -37,94 +46,185 @@ PanelWindow {
         onExtracted: hex => Theme.wallpaperAccent = hex
     }
 
-    Canvas {
-        id: canvas
-        anchors.fill: parent
+    // ── bordas ──
+    Rectangle {
+        anchors.top: parent.top
+        width: parent.width
+        height: root.frameWidth
+        color: root.frameColor
+    }
 
-        Connections {
-            target: Theme
+    Rectangle {
+        anchors.bottom: parent.bottom
+        width: parent.width
+        height: root.frameWidth
+        color: root.frameColor
+    }
 
-            function onSurfaceChanged() {
-                canvas.requestPaint();
-            }
-            function onBarModeChanged() {
-                canvas.requestPaint();
-            }
-            function onZenChanged() {
-                canvas.requestPaint();
-            }
-        }
+    Rectangle {
+        anchors.left: parent.left
+        y: root.frameWidth
+        width: root.frameWidth
+        height: parent.height - 2 * root.frameWidth
+        color: root.frameColor
+    }
 
-        Connections {
-            target: Panels
+    Rectangle {
+        anchors.right: parent.right
+        y: root.frameWidth
+        width: root.frameWidth
+        height: parent.height - 2 * root.frameWidth
+        color: root.frameColor
+    }
 
-            function onBarHeightChanged() {
-                canvas.requestPaint();
-            }
-        }
+    // ── cantos côncavos (um componente, girado 4x) ──
+    component InnerCorner: Canvas {
+        property int turn: 0
+
+        width: root.cornerRadius
+        height: root.cornerRadius
+        rotation: turn * 90
+        antialiasing: true
 
         onPaint: {
             const ctx = getContext("2d");
             ctx.reset();
-            const w = width, h = height;
-            const b = root.frameWidth;
-            const r = root.cornerRadius;
-            const iw = w - 2 * b;
-            const ih = h - 2 * b;
-
-            function innerPath() {
-                ctx.beginPath();
-                ctx.moveTo(b + r, b);
-                ctx.arcTo(b + iw, b, b + iw, b + ih, r);
-                ctx.arcTo(b + iw, b + ih, b, b + ih, r);
-                ctx.arcTo(b, b + ih, b, b, r);
-                ctx.arcTo(b, b, b + iw, b, r);
-                ctx.closePath();
-            }
-
-            // moldura = retângulo externo menos o interno arredondado
-            ctx.save();
+            const s = root.cornerRadius;
             ctx.beginPath();
-            ctx.rect(0, 0, w, h);
-            ctx.moveTo(b + r, b);
-            ctx.arcTo(b, b, b, b + ih, r);
-            ctx.arcTo(b, b + ih, b + iw, b + ih, r);
-            ctx.arcTo(b + iw, b + ih, b + iw, b, r);
-            ctx.arcTo(b + iw, b, b, b, r);
+            ctx.moveTo(s, 0);
+            ctx.arc(s, s, s, -Math.PI / 2, Math.PI, true);
+            ctx.lineTo(0, 0);
             ctx.closePath();
-            ctx.fillStyle = Theme.surface;
-            ctx.fill("evenodd");
-            ctx.restore();
+            ctx.fillStyle = root.frameColor;
+            ctx.fill();
+        }
 
-            // sombra interna: strokes concêntricos clipados pro miolo.
-            // No modo contínuo a sombra nasce na base da barra (topo reto);
-            // no zen a barra some e volta pro contorno normal.
-            const fullBar = Theme.barMode === "full" && !Theme.zen;
-            const topY = Math.max(b, Panels.barHeight);
+        Connections {
+            target: root
 
-            function shadowPath() {
-                if (!fullBar) {
-                    innerPath();
-                    return;
-                }
-                ctx.beginPath();
-                ctx.moveTo(b, topY);
-                ctx.lineTo(b + iw, topY);
-                ctx.arcTo(b + iw, b + ih, b, b + ih, r);
-                ctx.arcTo(b, b + ih, b, topY, r);
-                ctx.closePath();
+            function onFrameColorChanged() {
+                parent.requestPaint();
+            }
+        }
+    }
+
+    InnerCorner {
+        turn: 0
+        x: root.frameWidth
+        y: root.frameWidth
+    }
+
+    InnerCorner {
+        turn: 1
+        x: parent.width - root.frameWidth - root.cornerRadius
+        y: root.frameWidth
+    }
+
+    InnerCorner {
+        turn: 2
+        x: parent.width - root.frameWidth - root.cornerRadius
+        y: parent.height - root.frameWidth - root.cornerRadius
+    }
+
+    InnerCorner {
+        turn: 3
+        x: root.frameWidth
+        y: parent.height - root.frameWidth - root.cornerRadius
+    }
+
+    // ── sombra interna: degradê suave nas 4 bordas ──
+    // No modo contínuo a banda de cima nasce na base da barra (animado);
+    // as bandas se sobrepõem nos cantos e escurecem de leve — como uma
+    // sombra interna de verdade faria.
+    property real shadowTop: (Theme.barMode === "full" && !Theme.zen)
+        ? Math.max(frameWidth, Panels.barHeight) : frameWidth
+
+    Behavior on shadowTop {
+        NumberAnimation {
+            duration: 300
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    readonly property color shadowInk: Qt.rgba(0, 0, 0, 0.16)
+
+    Rectangle {
+        x: root.frameWidth
+        y: root.shadowTop
+        width: parent.width - 2 * root.frameWidth
+        height: root.shadowSize
+
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: root.shadowInk
             }
 
-            ctx.save();
-            shadowPath();
-            ctx.clip();
-            for (let i = root.shadowSteps; i >= 1; i--) {
-                ctx.strokeStyle = Qt.rgba(0, 0, 0, root.shadowAlpha);
-                ctx.lineWidth = i * 4;
-                shadowPath();
-                ctx.stroke();
+            GradientStop {
+                position: 1
+                color: "transparent"
             }
-            ctx.restore();
+        }
+    }
+
+    Rectangle {
+        x: root.frameWidth
+        y: parent.height - root.frameWidth - root.shadowSize
+        width: parent.width - 2 * root.frameWidth
+        height: root.shadowSize
+
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "transparent"
+            }
+
+            GradientStop {
+                position: 1
+                color: root.shadowInk
+            }
+        }
+    }
+
+    Rectangle {
+        x: root.frameWidth
+        y: root.shadowTop
+        width: root.shadowSize
+        height: parent.height - root.shadowTop - root.frameWidth
+
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+
+            GradientStop {
+                position: 0
+                color: root.shadowInk
+            }
+
+            GradientStop {
+                position: 1
+                color: "transparent"
+            }
+        }
+    }
+
+    Rectangle {
+        x: parent.width - root.frameWidth - root.shadowSize
+        y: root.shadowTop
+        width: root.shadowSize
+        height: parent.height - root.shadowTop - root.frameWidth
+
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+
+            GradientStop {
+                position: 0
+                color: "transparent"
+            }
+
+            GradientStop {
+                position: 1
+                color: root.shadowInk
+            }
         }
     }
 }

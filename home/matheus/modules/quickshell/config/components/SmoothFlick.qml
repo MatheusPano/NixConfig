@@ -9,7 +9,7 @@ Flickable {
     id: root
 
     // px por tick da roda (angleDelta de 120)
-    property real wheelStep: 104
+    property real wheelStep: 150
 
     property real destY: 0
 
@@ -23,8 +23,8 @@ Flickable {
         id: wheelAnim
         target: root
         property: "contentY"
-        duration: 280
-        easing.type: Easing.OutCubic
+        duration: 340
+        easing.type: Easing.OutExpo
     }
 
     WheelHandler {

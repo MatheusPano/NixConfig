@@ -4,8 +4,9 @@ import Quickshell.Wayland
 import "../services"
 
 // Barra do topo: 3 pills (workspaces | ilha | indicadores) com curvas
-// côncavas nas laterais + fillets nos cantos da tela. No modo zen a barra
-// desliza pra cima e a zona exclusiva acompanha.
+// côncavas nas laterais + fillets nos cantos, TUDO numa janela só — os
+// fillets moram na faixa extra abaixo dos pills e deslizam junto com a
+// barra no zen (as janelas separadas do AGS eram a fonte do "pop" feio).
 Scope {
     id: root
 
@@ -32,17 +33,20 @@ Scope {
             right: true
         }
 
-        implicitHeight: root.pillHeight
+        // faixa extra pros fillets; a zona exclusiva continua só dos pills
+        implicitHeight: root.pillHeight + root.filletSize
         exclusiveZone: Math.round(root.reveal * root.pillHeight)
         color: "transparent"
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "quickshell-bar"
 
-        // zen: nada de clique na faixa invisível
-        mask: Theme.zen ? emptyRegion : null
-
-        Region {
-            id: emptyRegion
+        // input: só a faixa dos pills; a área dos fillets é click-through
+        // (e no zen a janela inteira ignora cliques)
+        mask: Region {
+            x: 0
+            y: 0
+            width: Theme.zen ? 0 : barWindow.width
+            height: Theme.zen ? 0 : root.pillHeight
         }
 
         Component.onCompleted: Panels.barHeight = root.pillHeight
@@ -52,13 +56,15 @@ Scope {
             clip: true
 
             Item {
+                id: slider
                 width: parent.width
                 height: parent.height
-                y: (root.reveal - 1) * root.pillHeight
+                y: (root.reveal - 1) * (root.pillHeight + root.filletSize)
 
                 // modo contínuo: o fundo fecha os vãos entre os pills
                 Rectangle {
-                    anchors.fill: parent
+                    width: parent.width
+                    height: root.pillHeight
                     color: Theme.surface
                     visible: Theme.barMode === "full"
                 }
@@ -66,7 +72,7 @@ Scope {
                 // ── pill esquerdo: workspaces ──
                 Row {
                     anchors.left: parent.left
-                    height: parent.height
+                    height: root.pillHeight
 
                     Rectangle {
                         height: parent.height
@@ -90,7 +96,7 @@ Scope {
                 // ── pill central: ilha dinâmica ──
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    height: parent.height
+                    height: root.pillHeight
 
                     RoundedAngleEnd {
                         place: "topleft"
@@ -118,7 +124,7 @@ Scope {
                 // ── pill direito: indicadores ──
                 Row {
                     anchors.right: parent.right
-                    height: parent.height
+                    height: root.pillHeight
 
                     RoundedAngleEnd {
                         place: "topleft"
@@ -138,77 +144,56 @@ Scope {
                         }
                     }
                 }
-            }
-        }
-    }
 
-    // ── fillets côncavos onde os pills encontram a moldura ──
-    component CornerFillet: PanelWindow {
-        id: fillet
+                // ── fillets côncavos onde os pills encontram a moldura ──
+                // na mesma janela: deslizam junto com a barra no zen
+                component CornerFillet: Canvas {
+                    property string side: "left"
 
-        property string side: "left"
+                    y: root.pillHeight
+                    width: root.filletSize
+                    height: root.filletSize
+                    antialiasing: true
 
-        anchors {
-            top: true
-            left: side === "left"
-            right: side === "right"
-        }
+                    Connections {
+                        target: Theme
 
-        margins {
-            top: root.pillHeight
-            left: side === "left" ? root.frameWidth : 0
-            right: side === "right" ? root.frameWidth : 0
-        }
+                        function onSurfaceChanged() {
+                            parent.requestPaint();
+                        }
+                    }
 
-        implicitWidth: root.filletSize
-        implicitHeight: root.filletSize
-        color: "transparent"
-        visible: !Theme.zen
-        exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.namespace: "quickshell-fillet"
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.reset();
+                        const s = root.filletSize;
+                        ctx.beginPath();
+                        if (side === "left") {
+                            ctx.moveTo(s, 0);
+                            ctx.arc(s, s, s, -Math.PI / 2, Math.PI, true);
+                            ctx.lineTo(0, 0);
+                        } else {
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(s, 0);
+                            ctx.lineTo(s, s);
+                            ctx.arc(0, s, s, 0, -Math.PI / 2, true);
+                        }
+                        ctx.closePath();
+                        ctx.fillStyle = Theme.surface;
+                        ctx.fill();
+                    }
+                }
 
-        // click-through
-        mask: Region {}
+                CornerFillet {
+                    side: "left"
+                    x: root.frameWidth
+                }
 
-        Canvas {
-            anchors.fill: parent
-
-            Connections {
-                target: Theme
-
-                function onSurfaceChanged() {
-                    parent.requestPaint();
+                CornerFillet {
+                    side: "right"
+                    x: parent.width - root.frameWidth - root.filletSize
                 }
             }
-
-            onPaint: {
-                const ctx = getContext("2d");
-                ctx.reset();
-                const s = root.filletSize;
-                ctx.beginPath();
-                if (fillet.side === "left") {
-                    ctx.moveTo(s, 0);
-                    ctx.arc(s, s, s, -Math.PI / 2, Math.PI, true);
-                    ctx.lineTo(0, 0);
-                } else {
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(s, 0);
-                    ctx.lineTo(s, s);
-                    ctx.arc(0, s, s, 0, -Math.PI / 2, true);
-                }
-                ctx.closePath();
-                ctx.fillStyle = Theme.surface;
-                ctx.fill();
-            }
         }
-    }
-
-    CornerFillet {
-        side: "left"
-    }
-
-    CornerFillet {
-        side: "right"
     }
 }

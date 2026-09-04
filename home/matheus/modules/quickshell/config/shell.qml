@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import "services"
 import "bar"
 import "panels"
@@ -33,7 +34,40 @@ ShellRoot {
             Quickshell.env("HOME") + "/.local/state/quickshell"]);
     }
 
-    // ── IPC: qs ipc call panel <fn> (substitui o ags request) ──
+    // ── atalhos globais do Hyprland: o compositor entrega a tecla direto
+    // pro processo da shell — sem spawnar o CLI qs a cada aperto (que era
+    // o ~meio segundo de atraso pra abrir os painéis) ──
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "zen"
+        onPressed: Theme.toggleZen()
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "sidebar"
+        onPressed: Panels.qsOpen = !Panels.qsOpen
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "center"
+        onPressed: Panels.centerOpen = !Panels.centerOpen
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "wallpaper"
+        onPressed: Panels.wpOpen = !Panels.wpOpen
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "clipboard"
+        onPressed: Panels.clipOpen = !Panels.clipOpen
+    }
+
+    // ── IPC: qs ipc call panel <fn> (uso manual / scripts) ──
     IpcHandler {
         target: "panel"
 
@@ -69,20 +103,20 @@ ShellRoot {
         running: Theme.managed
         interval: 3000
         onTriggered: {
-            // sem aspas nos binds: o execDetached não passa por shell, então
-            // aspas iriam literais pro hyprctl e o exec ficava com uma aspa
-            // sobrando no fim ("qs ipc call panel zen'" — bind morto)
+            // dispatcher `global`: aciona os GlobalShortcut declarados acima.
+            // Sem aspas nos binds: o execDetached não passa por shell, então
+            // aspas iriam literais pro hyprctl (bind morto).
             const binds = [
                 "keyword unbind SUPER,B",
                 "keyword unbind SUPER,N",
                 "keyword unbind SUPER,A",
                 "keyword unbind SUPER SHIFT,W",
                 "keyword unbind SUPER,V",
-                "keyword bind SUPER,B,exec,qs ipc call panel zen",
-                "keyword bind SUPER,N,exec,qs ipc call panel sidebar",
-                "keyword bind SUPER,A,exec,qs ipc call panel center",
-                "keyword bind SUPER SHIFT,W,exec,qs ipc call panel wallpaper",
-                "keyword bind SUPER,V,exec,qs ipc call panel clipboard",
+                "keyword bind SUPER,B,global,quickshell:zen",
+                "keyword bind SUPER,N,global,quickshell:sidebar",
+                "keyword bind SUPER,A,global,quickshell:center",
+                "keyword bind SUPER SHIFT,W,global,quickshell:wallpaper",
+                "keyword bind SUPER,V,global,quickshell:clipboard",
                 `keyword general:gaps_out ${Theme.gapsOutFor(Theme.zen)}`,
             ].join(" ; ");
             Quickshell.execDetached(["hyprctl", "--batch", binds]);

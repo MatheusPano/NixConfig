@@ -15,6 +15,7 @@
     ../../nixos/modules/docker.nix
     ../../nixos/modules/greetd.nix
     ../../nixos/modules/hyprland.nix
+    ../../nixos/modules/remote-mac.nix
     ../../nixos/modules/xdg-portal.nix
     ../../nixos/modules/zsh.nix
 

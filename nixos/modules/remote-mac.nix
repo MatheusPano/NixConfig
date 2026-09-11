@@ -14,7 +14,15 @@ let
   macRemote = pkgs.writeShellScriptBin "mac-remote" ''
     BITRATE="''${MAC_BITRATE:-15000}"
     FPS="''${MAC_FPS:-60}"
-    RES="''${MAC_RES:---1080}"
+    # MAC_RES aceita preset (720/1080/1440/4K) ou WxH exato. Casar a resolucao
+    # do stream com a do Mac importa: se o espaco capturado for maior que o
+    # transmitido, o Sunshine recorta a partir do canto e a coordenada do mouse
+    # cai fora do intervalo, prendendo o cursor em (0,0).
+    case "''${MAC_RES:-1080}" in
+      720|1080|1440|4K) RES_ARGS=( "--''${MAC_RES:-1080}" ) ;;
+      *x*)              RES_ARGS=( --resolution "$MAC_RES" ) ;;
+      *) echo "MAC_RES invalido: $MAC_RES (use 720/1080/1440/4K ou 2560x1440)" >&2; exit 1 ;;
+    esac
 
     # O mouse absoluto depende do Sunshine saber em qual display escrever a
     # coordenada; com mais de um monitor no Mac ele erra o alvo e o cursor
@@ -26,7 +34,7 @@ let
     esac
 
     exec ${pkgs.moonlight-qt}/bin/moonlight stream \
-      "$RES" \
+      "''${RES_ARGS[@]}" \
       --fps "$FPS" \
       --bitrate "$BITRATE" \
       --video-codec HEVC \

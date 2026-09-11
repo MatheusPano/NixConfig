@@ -16,13 +16,22 @@ let
     FPS="''${MAC_FPS:-60}"
     RES="''${MAC_RES:---1080}"
 
+    # O mouse absoluto depende do Sunshine saber em qual display escrever a
+    # coordenada; com mais de um monitor no Mac ele erra o alvo e o cursor
+    # simplesmente nao anda (o teclado continua funcionando, porque nao usa
+    # coordenada). MAC_MOUSE=relative escapa disso.
+    case "''${MAC_MOUSE:-absolute}" in
+      relative) MOUSE="--no-absolute-mouse" ;;
+      *)        MOUSE="--absolute-mouse" ;;
+    esac
+
     exec ${pkgs.moonlight-qt}/bin/moonlight stream \
       "$RES" \
       --fps "$FPS" \
       --bitrate "$BITRATE" \
       --video-codec HEVC \
       --display-mode fullscreen \
-      --absolute-mouse \
+      "$MOUSE" \
       --capture-system-keys always \
       --frame-pacing \
       --no-vsync \

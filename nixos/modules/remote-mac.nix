@@ -4,7 +4,7 @@ let
   # Nome do Mac Mini M4 na tailnet (MagicDNS). FQDN completo de proposito:
   # funciona mesmo se o search domain da tailnet nao estiver no resolv.conf.
   # IP correspondente: 100.83.136.73
-  macHost = "mac-mini-de-matheus.taileea6a31.ts.net";
+  macHost = "mac-mini-de-matheus.tailea6a31.ts.net";
 
   # Ajuste resolucao/bitrate ao link. Entre cidades, comece em 15000 kbps.
   # Flags conferidas contra moonlight-qt 6.1.0 (`moonlight stream --help`).

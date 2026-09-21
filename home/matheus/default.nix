@@ -1,16 +1,15 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [
-    ./modules/desktop-shell.nix
     ./modules/git/default.nix
     ./modules/zsh/default.nix
+    ./modules/kitty/default.nix
     ./modules/ghostty/default.nix
     ./modules/yazi/default.nix
     ./modules/gtk/default.nix
     ./modules/xdg/default.nix
     ./modules/hyprland/default.nix
-    ./modules/ags/default.nix
     ./modules/quickshell/default.nix
     ./modules/flutter/default.nix
     ./modules/vscode/default.nix
@@ -18,10 +17,6 @@
     ./modules/spicetify/default.nix
     ./modules/packages.nix
   ];
-
-  # Shell de desktop ativa. Voltar pro AGS = trocar pra "ags" e rebuild;
-  # os dois módulos ficam no repo (ver modules/desktop-shell.nix).
-  desktop.bar = "quickshell";
 
   home.username = "matheus";
   home.homeDirectory = "/home/matheus";
@@ -48,8 +43,21 @@
     # em hyprcursor no nixpkgs (so rose-pine-hyprcursor).
   };
 
+  # O pointerCursor acima exporta XCURSOR_* apenas via hm-session-vars.sh, que
+  # so shell de login carrega - e o greetd sobe o uwsm SEM shell, entao o
+  # Hyprland/quickshell nasciam sem XCURSOR_THEME e caiam no cursor default
+  # (so apareceu no reboot de 2026-09-06: a sessao anterior tinha semanas e
+  # nascera de uma config antiga que ainda declarava o cursor no hyprland.conf).
+  # environment.d entra no systemd user antes do compositor subir.
+  systemd.user.sessionVariables = {
+    XCURSOR_THEME = config.home.pointerCursor.name;
+    XCURSOR_SIZE = toString config.home.pointerCursor.size;
+  };
+
   home.sessionVariables = {
-    TERMINAL = "ghostty";
+    # kitty desde 2026-09-11: abre bem mais rapido que o Ghostty (ver
+    # modules/kitty/). O Ghostty segue instalado, so nao e mais o padrao.
+    TERMINAL = "kitty";
     # `--wait` e obrigatorio: sem ele o `code` retorna na hora e o git acha que
     # voce fechou o editor com a mensagem vazia (aborta commit, rebase -i, etc).
     EDITOR = "code --wait";

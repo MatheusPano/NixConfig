@@ -30,13 +30,22 @@
       # NixOS — via nh: mostra o diff de pacotes antes de ativar
       nix-config = "code ~/nixos-config";
       hypr-config = "code ~/nixos-config/home/matheus/modules/hyprland/hyprland.conf";
-      ags-config = "code ~/.config/ags";
+      # A shell antiga saiu; o que se edita agora e o shell.json do caelestia
+      # (o QML dele vive na store, com nossos patches em modules/quickshell)
+      qs-config = "code ~/.config/caelestia";
       nix-switch = "nh os switch";
       nix-test = "nh os test";
       nix-boot = "nh os boot"; # ativa só no próximo boot
       # nh clean limpa também as gerações do home-manager, que o
-      # nix-collect-garbage antigo nunca tocava
-      nix-clean = "nh clean all --keep 5 --keep-since 14d";
+      # nix-collect-garbage antigo nunca tocava.
+      # --keep 2 = a geração atual + a anterior (o fallback pra "vai que dá
+      # errado"); todo o resto vai embora. Sem --keep-since de propósito: ele
+      # é uma união com o --keep, então qualquer valor > 0h faria segurar
+      # gerações recentes ALÉM das 2 e furaria a conta.
+      # ATENÇÃO: "anterior" é por posição, não por conteúdo — a cada rebuild
+      # a antiga cai fora. Pra prender uma geração específica pra sempre, use
+      # um gcroot (nix-store --add-root), não este alias.
+      nix-clean = "nh clean all --keep 2";
       nix-gens = "nh os info"; # lista as gerações disponíveis
       nix-rollback = "nh os rollback";
 
@@ -120,7 +129,7 @@
     };
   };
 
-  # cd inteligente: aprende os diretórios que você usa (cd nix, cd ags…);
+  # cd inteligente: aprende os diretórios que você usa (cd nix, cd hypr…);
   # caminhos reais continuam funcionando normal
   programs.zoxide = {
     enable = true;

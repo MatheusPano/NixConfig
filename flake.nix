@@ -23,6 +23,11 @@
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Shell do caelestia pra teste lado a lado (script testar-caelestia).
+    # Sem follows de propósito: o shell deles exige a versão de quickshell
+    # que ELES pinam — seguir o nixpkgs daqui quebraria o par testado.
+    caelestia-shell.url = "github:caelestia-dots/shell";
   };
 
   outputs = inputs@{ self, nixpkgs, ... }: {

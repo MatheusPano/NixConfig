@@ -1,14 +1,15 @@
 import QtQuick
 import "../services"
 
-// Slider fino estilo iOS: trilho + preenchimento + bolinha.
+// Slider M3 (estilo novo, parrudo): trilho grosso de pontas redondas,
+// preenchimento na primária e handle de barrinha vertical, como o caelestia.
 Item {
     id: root
 
     property real value: 0
-    property color trackColor: Theme.cream ? Qt.rgba(90 / 255, 66 / 255, 48 / 255, 0.14) : Qt.rgba(1, 1, 1, 0.12)
-    property color fillColor: Theme.fgMid
-    property color handleColor: Theme.fg
+    property color trackColor: Theme.alpha(Theme.primary, Theme.cream ? 0.18 : 0.22)
+    property color fillColor: Theme.primary
+    property color handleColor: Theme.onPrimary
     property bool dragging: mouse.pressed
 
     signal moved(real value)
@@ -20,33 +21,30 @@ Item {
         id: track
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width
-        height: 6
-        radius: 3
+        height: 12
+        radius: 999
         color: root.trackColor
     }
 
     Rectangle {
         anchors.verticalCenter: parent.verticalCenter
-        width: Math.max(6, Math.min(1, root.value) * track.width)
-        height: 6
-        radius: 3
+        width: Math.max(12, Math.min(1, root.value) * track.width)
+        height: 12
+        radius: 999
         color: root.fillColor
     }
 
     Rectangle {
         id: handle
         anchors.verticalCenter: parent.verticalCenter
-        x: Math.max(0, Math.min(parent.width - width, root.value * (parent.width - width)))
-        width: 14
-        height: 14
-        radius: 7
+        x: Math.max(2, Math.min(parent.width - width - 2, root.value * (parent.width - width)))
+        width: 4
+        height: mouse.pressed ? 20 : 16
+        radius: 2
         color: root.handleColor
-        scale: mouse.pressed ? 1.25 : 1
 
-        Behavior on scale {
-            NumberAnimation {
-                duration: 120
-            }
+        Behavior on height {
+            Anim { curve: "fast" }
         }
     }
 

@@ -16,6 +16,9 @@ Row {
         hoverColor: Theme.alpha(Theme.primary, 0.15)
         implicitWidth: arrow.implicitWidth + 12
         implicitHeight: arrow.implicitHeight + 4
+        tooltip: Panels.trayRevealed ? "Recolher a bandeja"
+            : SystemTray.items.values.length === 1 ? "1 ícone na bandeja"
+            : `${SystemTray.items.values.length} ícones na bandeja`
 
         MonoText {
             id: arrow
@@ -34,10 +37,7 @@ Row {
         clip: true
 
         Behavior on width {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.OutCubic
-            }
+            Anim { curve: "fast" }
         }
 
         Row {
@@ -55,6 +55,9 @@ Row {
                     hoverColor: Theme.alpha(Theme.primary, 0.15)
                     implicitWidth: 26
                     implicitHeight: 24
+                    tooltip: modelData.tooltipTitle || modelData.title || modelData.id
+                    // muitos apps de bandeja tratam scroll (volume, brilho…)
+                    scrollable: true
 
                     IconImage {
                         anchors.centerIn: parent
@@ -83,6 +86,8 @@ Row {
                     }
 
                     onRightClicked: menuAnchor.open()
+
+                    onScrolled: dir => trayItem.modelData.scroll(dir * 120, false)
                 }
             }
         }

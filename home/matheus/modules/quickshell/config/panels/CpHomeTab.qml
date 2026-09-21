@@ -74,14 +74,19 @@ ColumnLayout {
             }
 
             // clima
+            // ── clima ──
+            // Reformado: a cidade agora aparece (antes só existia o botão de
+            // alfinete, sem dizer de ONDE era a previsão), a faixa horária
+            // vai a 24h com curva de temperatura, e os dias ganharam barra
+            // de amplitude no lugar de dois números soltos.
             Card {
+                id: weatherCard
+
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 implicitHeight: weatherCol.implicitHeight + 24
 
                 property bool editing: false
-
-                id: weatherCard
 
                 ColumnLayout {
                     id: weatherCol
@@ -91,7 +96,7 @@ ColumnLayout {
                     anchors.margins: 14
                     spacing: 8
 
-                    // atual
+                    // ── agora + local ──
                     RowLayout {
                         visible: !weatherCard.editing
                         Layout.fillWidth: true
@@ -99,12 +104,11 @@ ColumnLayout {
 
                         IconLabel {
                             text: Weather.now ? Weather.icon(Weather.now.code, Weather.now.isDay) : "\u{F0590}"
-                            font.pixelSize: 28
+                            font.pixelSize: 34
                             color: Theme.primary
                         }
 
                         ColumnLayout {
-                            Layout.fillWidth: true
                             spacing: 0
 
                             RowLayout {
@@ -112,12 +116,13 @@ ColumnLayout {
 
                                 UiText {
                                     text: Weather.now ? `${Weather.now.temp}°` : "—"
-                                    font.pixelSize: 18
+                                    font.pixelSize: 22
                                     font.bold: true
                                 }
 
                                 UiText {
                                     Layout.alignment: Qt.AlignBottom
+                                    Layout.bottomMargin: 3
                                     text: Weather.now ? `sensação ${Weather.now.feels}°` : ""
                                     font.pixelSize: 11
                                     color: Theme.fgDim
@@ -125,24 +130,47 @@ ColumnLayout {
                             }
 
                             UiText {
-                                Layout.fillWidth: true
                                 text: Weather.now ? Weather.now.desc : "Clima indisponível"
                                 font.pixelSize: 13
                                 color: Theme.fgMid
                             }
                         }
 
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        // O alfinete virou a própria etiqueta do lugar: mostra
+                        // de onde é a previsão E é o botão de trocar.
                         Clickable {
                             Layout.alignment: Qt.AlignTop
-                            implicitWidth: 26
-                            implicitHeight: 24
+                            implicitWidth: locRow.implicitWidth + 18
+                            implicitHeight: 26
                             radius: 8
+                            tooltip: "Trocar de cidade"
 
-                            IconLabel {
+                            Row {
+                                id: locRow
                                 anchors.centerIn: parent
-                                text: "\u{F034E}"
-                                font.pixelSize: 13
-                                color: parent.hovered ? Theme.fgMid : Theme.fgFaint
+                                spacing: 5
+
+                                IconLabel {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "\u{F034E}"
+                                    font.pixelSize: 12
+                                    color: Theme.fgDim
+                                }
+
+                                UiText {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: {
+                                        if (Weather.now && Weather.now.city)
+                                            return Weather.now.city;
+                                        return Weather.city !== "" ? Weather.city : "Detectando…";
+                                    }
+                                    font.pixelSize: 12
+                                    color: Theme.fgMid
+                                }
                             }
 
                             onClicked: {
@@ -151,9 +179,26 @@ ColumnLayout {
                                 cityInput.forceActiveFocus();
                             }
                         }
+
+                        Clickable {
+                            Layout.alignment: Qt.AlignTop
+                            implicitWidth: 26
+                            implicitHeight: 26
+                            radius: 8
+                            tooltip: "Atualizar agora"
+
+                            IconLabel {
+                                anchors.centerIn: parent
+                                text: "\u{F0450}"
+                                font.pixelSize: 13
+                                color: parent.hovered ? Theme.fgMid : Theme.fgFaint
+                            }
+
+                            onClicked: Weather.fetch(true)
+                        }
                     }
 
-                    // edição da cidade
+                    // ── edição da cidade ──
                     RowLayout {
                         visible: weatherCard.editing
                         Layout.fillWidth: true
@@ -179,6 +224,8 @@ ColumnLayout {
                                     Weather.setCity(text);
                                     weatherCard.editing = false;
                                 }
+
+                                Keys.onEscapePressed: weatherCard.editing = false
 
                                 UiText {
                                     anchors.fill: parent
@@ -225,7 +272,7 @@ ColumnLayout {
                         }
                     }
 
-                    // detalhes: umidade / vento / uv
+                    // ── umidade / vento / uv ──
                     RowLayout {
                         visible: Weather.now !== null
                         Layout.fillWidth: true
@@ -277,101 +324,227 @@ ColumnLayout {
                     Rectangle {
                         visible: Weather.hours.length > 0
                         Layout.fillWidth: true
+                        Layout.topMargin: 2
                         implicitHeight: 1
                         color: Theme.separator
                     }
 
-                    // próximas horas
-                    RowLayout {
-                        visible: Weather.hours.length > 0
+                    // ── próximas 24h ──
+                    ColumnLayout {
+                        id: hourly
+
+                        visible: Weather.hours.length > 1
                         Layout.fillWidth: true
+                        spacing: 2
 
-                        Repeater {
-                            model: Weather.hours
+                        readonly property var temps: Weather.hours.map(h => h.temp)
 
-                            delegate: ColumnLayout {
-                                required property var modelData
+                        RowLayout {
+                            Layout.fillWidth: true
 
+                            UiText {
+                                text: "Próximas 24h"
+                                font.pixelSize: 10
+                                font.bold: true
+                                font.letterSpacing: 0.4
+                                color: Theme.fgFaint
+                            }
+
+                            Item {
                                 Layout.fillWidth: true
-                                spacing: 2
+                            }
 
-                                UiText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: parent.modelData ? parent.modelData.hour : ""
-                                    font.pixelSize: 10
-                                    color: Theme.fgDim
-                                }
+                            UiText {
+                                visible: hourly.temps.length > 0
+                                text: hourly.temps.length > 0
+                                    ? `mín ${Math.min(...hourly.temps)}° · máx ${Math.max(...hourly.temps)}°`
+                                    : ""
+                                font.pixelSize: 10
+                                color: Theme.fgFaint
+                            }
+                        }
 
-                                IconLabel {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: parent.modelData ? Weather.icon(parent.modelData.code, true) : ""
-                                    font.pixelSize: 14
-                                    color: Theme.fgMid
-                                }
+                        // a curva alinha com as colunas abaixo: mesmo pai,
+                        // mesma largura, ponto no centro de cada coluna
+                        TempCurve {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 34
+                            temps: hourly.temps
+                        }
 
-                                UiText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: parent.modelData ? `${parent.modelData.temp}°` : ""
-                                    font.pixelSize: 12
-                                }
+                        RowLayout {
+                            Layout.fillWidth: true
 
-                                UiText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    visible: parent.modelData && parent.modelData.rain >= 20
-                                    text: parent.modelData ? `${parent.modelData.rain}%` : ""
-                                    font.pixelSize: 9
-                                    color: Theme.cyanish
+                            Repeater {
+                                model: Weather.hours
+
+                                // Layout.fillWidth em TODOS os filhos, e o
+                                // centro vem do horizontalAlignment do texto.
+                                // Com Layout.alignment (como era antes) os
+                                // filhos ficavam com maximumWidth = a largura
+                                // do próprio texto, isso virava o máximo da
+                                // coluna, e a fileira inteira não passava de
+                                // 119px — as horas viviam amontoadas à
+                                // esquerda embaixo de uma curva larga.
+                                delegate: ColumnLayout {
+                                    id: slot
+
+                                    required property var modelData
+
+                                    Layout.fillWidth: true
+                                    spacing: 1
+
+                                    UiText {
+                                        Layout.fillWidth: true
+                                        horizontalAlignment: Text.AlignHCenter
+                                        text: slot.modelData.hour
+                                        font.pixelSize: 10
+                                        color: Theme.fgDim
+                                    }
+
+                                    IconLabel {
+                                        Layout.fillWidth: true
+                                        text: Weather.icon(slot.modelData.code, true)
+                                        font.pixelSize: 15
+                                        color: Theme.fgMid
+                                    }
+
+                                    UiText {
+                                        Layout.fillWidth: true
+                                        horizontalAlignment: Text.AlignHCenter
+                                        text: `${slot.modelData.temp}°`
+                                        font.pixelSize: 12
+                                    }
+
+                                    // sempre renderiza (vazio quando é pouco):
+                                    // com `visible` a fileira mudava de altura
+                                    // conforme a previsão
+                                    UiText {
+                                        Layout.fillWidth: true
+                                        horizontalAlignment: Text.AlignHCenter
+                                        text: slot.modelData.rain >= 20 ? `${slot.modelData.rain}%` : ""
+                                        font.pixelSize: 9
+                                        color: Theme.cyanish
+                                    }
                                 }
                             }
                         }
                     }
 
-                    // 3 dias
-                    ColumnLayout {
+                    Rectangle {
                         visible: Weather.days.length > 0
                         Layout.fillWidth: true
                         Layout.topMargin: 2
-                        spacing: 3
+                        implicitHeight: 1
+                        color: Theme.separator
+                    }
+
+                    // ── próximos dias ──
+                    ColumnLayout {
+                        id: daysCol
+
+                        visible: Weather.days.length > 0
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        // amplitude dos 3 dias, pra barra de cada um ser
+                        // comparável com a dos outros
+                        readonly property real allMin: Weather.days.length > 0
+                            ? Math.min(...Weather.days.map(d => d.min)) : 0
+                        readonly property real allMax: Weather.days.length > 0
+                            ? Math.max(...Weather.days.map(d => d.max)) : 1
+                        readonly property real allSpan: Math.max(1, allMax - allMin)
 
                         Repeater {
                             model: Weather.days
 
                             delegate: RowLayout {
+                                id: dayRow
+
                                 required property var modelData
 
                                 Layout.fillWidth: true
                                 spacing: 8
 
                                 UiText {
-                                    Layout.fillWidth: true
-                                    text: modelData.name
+                                    Layout.preferredWidth: 56
+                                    text: dayRow.modelData.name
                                     font.pixelSize: 12
                                     color: Theme.fgMid
                                 }
 
+                                IconLabel {
+                                    text: Weather.icon(dayRow.modelData.code, true)
+                                    font.pixelSize: 14
+                                    color: Theme.fgMid
+                                }
+
                                 UiText {
-                                    visible: modelData.rain >= 20
-                                    text: `\u{F0597} ${modelData.rain}%`
+                                    Layout.preferredWidth: 46
+                                    text: dayRow.modelData.rain >= 20
+                                        ? `\u{F0597} ${dayRow.modelData.rain}%` : ""
                                     font.family: Theme.fontIcon
                                     font.pixelSize: 10
                                     color: Theme.cyanish
                                 }
 
-                                IconLabel {
-                                    text: Weather.icon(modelData.code, true)
-                                    font.pixelSize: 13
-                                    color: Theme.fgMid
+                                Item {
+                                    Layout.fillWidth: true
                                 }
 
                                 UiText {
-                                    text: `${modelData.max}°`
-                                    font.pixelSize: 12
-                                }
-
-                                UiText {
-                                    text: `${modelData.min}°`
+                                    Layout.preferredWidth: 26
+                                    horizontalAlignment: Text.AlignRight
+                                    text: `${dayRow.modelData.min}°`
                                     font.pixelSize: 12
                                     color: Theme.fgDim
+                                }
+
+                                // barra de amplitude: onde o dia cai dentro do
+                                // intervalo dos três. Dois números soltos não
+                                // deixavam comparar os dias de relance.
+                                Item {
+                                    Layout.preferredWidth: 110
+                                    implicitHeight: 14
+
+                                    Rectangle {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: parent.width
+                                        height: 4
+                                        radius: 2
+                                        color: Theme.cream
+                                            ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.12)
+                                            : Qt.rgba(1, 1, 1, 0.08)
+                                    }
+
+                                    Rectangle {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: parent.width * (dayRow.modelData.min - daysCol.allMin) / daysCol.allSpan
+                                        width: Math.max(6, parent.width
+                                            * (dayRow.modelData.max - dayRow.modelData.min) / daysCol.allSpan)
+                                        height: 4
+                                        radius: 2
+
+                                        gradient: Gradient {
+                                            orientation: Gradient.Horizontal
+
+                                            GradientStop {
+                                                position: 0
+                                                color: Theme.cyanish
+                                            }
+
+                                            GradientStop {
+                                                position: 1
+                                                color: Theme.yellow
+                                            }
+                                        }
+                                    }
+                                }
+
+                                UiText {
+                                    Layout.preferredWidth: 26
+                                    text: `${dayRow.modelData.max}°`
+                                    font.pixelSize: 12
                                 }
                             }
                         }
@@ -380,6 +553,7 @@ ColumnLayout {
                     UiText {
                         visible: Weather.error !== ""
                         Layout.alignment: Qt.AlignHCenter
+                        Layout.topMargin: 2
                         text: Weather.error
                         font.pixelSize: 11
                         color: Theme.yellow
@@ -389,10 +563,13 @@ ColumnLayout {
         }
 
         // ── coluna direita: calendário ──
+        // Largura fixa em vez de metade do painel: com preferredWidth 1 dos
+        // dois lados ele comia 490px dos 980 só pra mostrar 7 colunas de
+        // número. O que sobra vai todo pra coluna da esquerda.
         Card {
-            Layout.fillWidth: true
+            Layout.fillWidth: false
             Layout.fillHeight: true
-            Layout.preferredWidth: 1
+            Layout.preferredWidth: 268
 
             property int monthOffset: 0
 
@@ -410,7 +587,7 @@ ColumnLayout {
                     UiText {
                         Layout.fillWidth: true
                         text: calGrid.title
-                        font.pixelSize: 13
+                        font.pixelSize: 12
                         font.weight: 600
                         color: Theme.fgMid
                     }
@@ -447,12 +624,22 @@ ColumnLayout {
                     }
                 }
 
+                // fillHeight: false de propósito — esticando, as 6 semanas
+                // se espalhavam por ~400px e o calendário parecia enorme
+                // mesmo com a bolinha pequena. Agora ele ocupa a altura que
+                // precisa e o resto do cartão fica livre.
                 CalendarGrid {
                     id: calGrid
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.fillHeight: false
+                    cellSize: 24
+                    dayFontSize: 11
                     monthOffset: calCard.monthOffset
                     today: root.now
+                }
+
+                Item {
+                    Layout.fillHeight: true
                 }
             }
         }
@@ -534,7 +721,7 @@ ColumnLayout {
 
             Repeater {
                 model: [
-                    { icon: "\u{F018D}", name: "Terminal", cmd: "ghostty" },
+                    { icon: "\u{F018D}", name: "Terminal", cmd: "kitty" },
                     { icon: "\u{F0239}", name: "Navegador", cmd: "zen" },
                     { icon: "\u{F024B}", name: "Arquivos", cmd: "thunar" },
                     { icon: "\u{F04C7}", name: "Spotify", cmd: "spotify" },

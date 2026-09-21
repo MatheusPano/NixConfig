@@ -240,9 +240,7 @@ PopupPanel {
                                 : (Theme.cream ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.15) : Qt.rgba(1, 1, 1, 0.1))
 
                             Behavior on color {
-                                ColorAnimation {
-                                    duration: 250
-                                }
+                                CAnim {}
                             }
 
                             IconLabel {
@@ -345,6 +343,15 @@ PopupPanel {
                     label: "Tema claro"
                     active: Theme.cream
                     onToggle: Theme.set("main", Theme.cream ? "dark" : "cream")
+                }
+
+                // desempenho + blur/sombra/animação fora + tela acesa,
+                // tudo num clique (e desfaz exatamente o que achou ligado)
+                QuickToggle {
+                    icon: "\u{F02B4}"
+                    label: "Modo jogo"
+                    active: Theme.gameMode
+                    onToggle: Toggles.toggleGameMode()
                 }
             }
 
@@ -463,9 +470,7 @@ PopupPanel {
                         opacity: active ? 1 : 0
 
                         Behavior on opacity {
-                            NumberAnimation {
-                                duration: 180
-                            }
+                            Anim { curve: "effects" }
                         }
                     }
 

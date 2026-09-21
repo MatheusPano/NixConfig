@@ -20,9 +20,7 @@ Rectangle {
     border.color: active ? Theme.fg : (mouse.containsMouse ? Theme.alpha(Theme.fg, 0.3) : "transparent")
 
     Behavior on border.color {
-        ColorAnimation {
-            duration: 180
-        }
+        CAnim {}
     }
 
     Rectangle {

@@ -1,7 +1,8 @@
 import QtQuick
 import "../services"
 
-// Segmented control estilo Apple. options: [{id, label, icon?, badge?}].
+// Segmented control M3: container em pill, segmento ativo vira
+// secondaryContainer sólida (linguagem de chips do caelestia).
 Rectangle {
     id: root
 
@@ -11,8 +12,8 @@ Rectangle {
 
     signal select(string id)
 
-    radius: 9
-    color: Theme.cream ? Qt.rgba(90 / 255, 66 / 255, 48 / 255, 0.1) : Qt.rgba(1, 1, 1, 0.06)
+    radius: 999
+    color: Theme.alpha(Theme.fg, Theme.cream ? 0.08 : 0.06)
     implicitWidth: row.implicitWidth + 4
     implicitHeight: row.implicitHeight + 4
 
@@ -29,17 +30,15 @@ Rectangle {
                 required property var modelData
                 readonly property bool active: root.value === modelData.id
 
-                radius: 7
+                radius: 999
                 color: active
-                    ? (Theme.cream ? Qt.rgba(1, 1, 1, 0.92) : Qt.rgba(1, 1, 1, 0.14))
+                    ? Theme.secondaryContainer
                     : (segMouse.containsMouse ? Theme.alpha(Theme.fg, 0.06) : "transparent")
                 implicitWidth: segRow.implicitWidth + root.segPaddingH * 2
                 implicitHeight: segRow.implicitHeight + 8
 
                 Behavior on color {
-                    ColorAnimation {
-                        duration: 120
-                    }
+                    CAnim {}
                 }
 
                 Row {

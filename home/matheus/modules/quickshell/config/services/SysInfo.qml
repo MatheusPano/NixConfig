@@ -296,7 +296,7 @@ echo @IP; ip -4 -o addr show scope global 2>/dev/null | head -1 | awk '{print $2
 
     // abre um terminal com um comando (rebuild, btop...)
     function term(cmd) {
-        Quickshell.execDetached(["hyprctl", "dispatch", "exec", `ghostty -e ${cmd}`]);
+        Quickshell.execDetached(["hyprctl", "dispatch", "exec", `kitty -e ${cmd}`]);
         Panels.centerOpen = false;
     }
 }

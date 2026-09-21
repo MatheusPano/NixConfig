@@ -16,7 +16,10 @@ PopupPanel {
     // vão do topo dentro da janela (mesmo motivo do CalendarPopup)
     anchors.top: true
     implicitWidth: 380
-    implicitHeight: card.implicitHeight + 38
+    implicitHeight: card.implicitHeight + cardTop
+
+    dock: true
+    readonly property real cardTop: docked ? Panels.barHeight : 38
 
     property int activeIdx: 0
 
@@ -39,14 +42,12 @@ PopupPanel {
         }
     }
 
-    Rectangle {
+    PanelCard {
         id: card
         anchors.fill: parent
-        anchors.topMargin: 38
-        radius: 20
-        color: Theme.surface
-        border.width: 1
-        border.color: Theme.separator
+        anchors.topMargin: root.cardTop
+        docked: root.docked
+        seamDepth: root.dockSeam
         implicitHeight: inner.implicitHeight + 32
 
         ColumnLayout {

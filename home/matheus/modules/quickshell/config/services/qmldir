@@ -12,3 +12,5 @@ singleton Toggles 1.0 Toggles.qml
 singleton NotifStore 1.0 NotifStore.qml
 singleton ColorTool 1.0 ColorTool.qml
 singleton Clip 1.0 Clip.qml
+singleton Tips 1.0 Tips.qml
+singleton Windows 1.0 Windows.qml

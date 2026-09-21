@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import Quickshell.Bluetooth
+import Quickshell.Hyprland
 
 // Estado de visibilidade dos painéis + o barramento de eventos da ilha
 // dinâmica (volume/mic/brilho/mídia/bt). Um evento por vez; o mais novo
@@ -21,10 +22,78 @@ Singleton {
     property bool clipOpen: false
     property bool wpOpen: false
     property bool trayRevealed: false
+    property bool sessionOpen: false
+
+    // ── switcher de janelas ──────────────────────────────────
+    // O Hyprland consome o Alt+Tab no bind, então a tecla nunca chega no
+    // switcher depois que ele abre: quem anda na lista é o próprio atalho,
+    // repetindo. O switcher só escuta.
+    property bool switcherOpen: false
+    property int switcherOpenDir: 1
+
+    signal switcherStep(int dir)
+
+    function switcherAdvance(dir) {
+        if (switcherOpen) {
+            switcherStep(dir);
+        } else {
+            switcherOpenDir = dir;
+            switcherOpen = true;
+        }
+    }
 
     // altura alocada da barra — alimentada pelo Bar, lida pelo Frame
     // pra posicionar a sombra interna no modo contínuo
     property int barHeight: 0
+
+    // ── encaixe dos painéis (a "concha") ─────────────────────
+    // O painel só publica ONDE ele encosta; quem desenha a ponte e as
+    // conchas côncavas é a barra, porque ela é a única janela de largura
+    // cheia — as conchas ficam FORA da largura do painel e seriam cortadas
+    // pela superfície dele.
+    //
+    // dockY = onde o topo do card fica na tela: barHeight pros popups que
+    // param embaixo da barra, 0 pro painel central (que sobe até o topo e
+    // encosta na moldura). Um dono por vez, igual ao Tips.
+    property var dockOwner: null
+    property real dockLeft: 0
+    property real dockRight: 0
+    property real dockY: 0
+    property var dockScreen: null
+
+    readonly property bool dockActive: dockOwner !== null
+
+    // Opacidade das conchas e da ponte: junção física do dono — a borda do
+    // card varrendo a faixa da concha (ver PopupPanel.dockReveal), não o
+    // progresso do slide inteiro.
+    readonly property real dockReveal: dockOwner ? dockOwner.dockReveal : 0
+
+    function dockClaim(who, left, right, y, scr) {
+        dockOwner = who;
+        dockLeft = left;
+        dockRight = right;
+        dockY = y;
+        dockScreen = scr;
+    }
+
+    function dockRelease(who) {
+        if (dockOwner === who)
+            dockOwner = null;
+    }
+
+    // ── tela ativa ───────────────────────────────────────────
+    // Barra e moldura existem em todas as telas (Variants); painel abre
+    // onde o foco está. Casa o monitor do Hyprland com a QuickshellScreen
+    // pelo nome, que é o que os dois lados têm em comum.
+    readonly property var focusedScreen: {
+        const name = Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : "";
+        const screens = Quickshell.screens;
+        for (const s of screens) {
+            if (s.name === name)
+                return s;
+        }
+        return screens.length > 0 ? screens[0] : null;
+    }
 
     function toggleQs() {
         qsOpen = !qsOpen;

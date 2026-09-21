@@ -15,10 +15,7 @@ Item {
     implicitHeight: 26
 
     Behavior on implicitWidth {
-        NumberAnimation {
-            duration: 220
-            easing.type: Easing.OutCubic
-        }
+        Anim {}
     }
 
     Rectangle {
@@ -27,9 +24,7 @@ Item {
         color: mouse.containsMouse ? Theme.alpha(Theme.primary, 0.15) : "transparent"
 
         Behavior on color {
-            ColorAnimation {
-                duration: 180
-            }
+            CAnim {}
         }
     }
 
@@ -52,16 +47,11 @@ Item {
         y: (parent.height - height) / 2 + (root.hasEvent ? 10 : 0)
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-            }
+            Anim { curve: "effects" }
         }
 
         Behavior on y {
-            NumberAnimation {
-                duration: 220
-                easing.type: Easing.OutCubic
-            }
+            Anim { curve: "fast" }
         }
     }
 
@@ -74,16 +64,11 @@ Item {
         y: (parent.height - height) / 2 + (root.hasEvent ? 0 : -10)
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-            }
+            Anim { curve: "effects" }
         }
 
         Behavior on y {
-            NumberAnimation {
-                duration: 220
-                easing.type: Easing.OutCubic
-            }
+            Anim { curve: "fast" }
         }
 
         MonoText {
@@ -122,9 +107,7 @@ Item {
                 color: Theme.fg
 
                 Behavior on width {
-                    NumberAnimation {
-                        duration: 120
-                    }
+                    Anim { curve: "effects" }
                 }
             }
         }

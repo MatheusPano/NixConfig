@@ -14,11 +14,15 @@ PopupPanel {
     onDismissed: Panels.calendarOpen = false
     slide: "top"
 
-    // o vão de 38px do topo fica dentro da janela: com margem na janela o
-    // slide aparecia cortado reto no meio do ar
+    // o vão do topo fica dentro da janela: com margem na janela o slide
+    // aparecia cortado reto no meio do ar
     anchors.top: true
     implicitWidth: 340
-    implicitHeight: content.implicitHeight + 32 + 38
+    implicitHeight: content.implicitHeight + 32 + cardTop
+
+    // encaixado o card encosta na barra; solto (zen) mantém os 38 de antes
+    dock: true
+    readonly property real cardTop: docked ? Panels.barHeight : 38
 
     property int monthOffset: 0
     property var events: []
@@ -51,13 +55,11 @@ PopupPanel {
         }
     }
 
-    Rectangle {
+    PanelCard {
         anchors.fill: parent
-        anchors.topMargin: 38
-        radius: 20
-        color: Theme.surface
-        border.width: 1
-        border.color: Theme.separator
+        anchors.topMargin: root.cardTop
+        docked: root.docked
+        seamDepth: root.dockSeam
 
         ColumnLayout {
             id: content

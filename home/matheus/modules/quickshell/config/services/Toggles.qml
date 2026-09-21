@@ -59,11 +59,33 @@ Singleton {
         airplaneOn = !airplaneOn;
     }
 
-    // ── café: parar o hypridle segura a tela acesa; sobrevive a
-    // reinício do shell (é uma unit, não um inhibitor nosso) ──
+    // ── café ─────────────────────────────────────────────────
+    // Era "systemctl stop hypridle": matava o daemon, então o estado
+    // sobrevivia à shell e o botão mentia depois de um restart. Agora é um
+    // idle inhibitor do protocolo (IdleGuard), que morre junto com a shell —
+    // se a shell cai, a tela volta a apagar sozinha, que é o certo.
     function toggleCaffeine() {
-        Quickshell.execDetached(["systemctl", "--user", caffeineOn ? "start" : "stop", "hypridle.service"]);
         caffeineOn = !caffeineOn;
+    }
+
+    // ── modo jogo ────────────────────────────────────────────
+    // Junta o que já existia solto: perfil de desempenho, blur/sombra/
+    // animação fora e tela sempre acesa. Em 16GB single channel o blur do
+    // Hyprland custa frame de verdade; é o toggle mais útil do painel
+    // durante uma partida.
+    function toggleGameMode() {
+        if (Theme.gameMode) {
+            const saved = Theme.gameSavedData;
+            Theme.exitGame();
+            caffeineOn = saved.caffeine ?? false;
+            if (saved.profile)
+                setPowerProfile(saved.profile);
+        } else {
+            Theme.enterGame({ profile: powerProfile, caffeine: caffeineOn });
+            caffeineOn = true;
+            if (powerProfile !== "")
+                setPowerProfile("performance");
+        }
     }
 
     function setPowerProfile(id) {
@@ -82,8 +104,7 @@ Singleton {
         command: ["bash", "-c",
             "powerprofilesctl get 2>/dev/null || echo; " +
             "pgrep -x hyprsunset >/dev/null && echo on || echo off; " +
-            "rfkill list wlan 2>/dev/null | grep -q 'Soft blocked: yes' && echo on || echo off; " +
-            "systemctl --user is-active hypridle.service 2>/dev/null || true"]
+            "rfkill list wlan 2>/dev/null | grep -q 'Soft blocked: yes' && echo on || echo off"]
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -92,8 +113,6 @@ Singleton {
                 if (root.hasNightLight)
                     root.nightLightOn = lines[1] === "on";
                 root.airplaneOn = lines[2] === "on";
-                if (root.hasIdleDaemon)
-                    root.caffeineOn = lines[3] !== "active";
             }
         }
     }

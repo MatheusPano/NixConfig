@@ -1,7 +1,8 @@
 import QtQuick
 import "../services"
 
-// Switch estilo iOS (o .cp-switch do scss).
+// Switch M3: desligado é vazado (borda outline, thumb pequeno na cor do
+// outline); ligado o track vira primária e o thumb cresce em onPrimary.
 Rectangle {
     id: root
 
@@ -12,28 +13,28 @@ Rectangle {
     implicitWidth: 46
     implicitHeight: 26
     radius: 999
-    color: checked ? Theme.primary
-        : (Theme.cream ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.25) : Qt.rgba(1, 1, 1, 0.15))
+    color: checked ? Theme.primary : Theme.alpha(Theme.surfaceContainerHighest, 0.9)
+    border.width: checked ? 0 : 2
+    border.color: Theme.outline
 
     Behavior on color {
-        ColorAnimation {
-            duration: 200
-        }
+        CAnim {}
     }
 
     Rectangle {
-        width: 22
-        height: 22
-        radius: 11
-        color: "#ffffff"
+        width: root.checked ? 20 : 12
+        height: width
+        radius: 999
+        color: root.checked ? Theme.onPrimary : Theme.outline
         anchors.verticalCenter: parent.verticalCenter
-        x: root.checked ? parent.width - width - 2 : 2
+        x: root.checked ? parent.width - width - 3 : 7
 
         Behavior on x {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.OutCubic
-            }
+            Anim { curve: "fast" }
+        }
+
+        Behavior on width {
+            Anim { curve: "fast" }
         }
     }
 

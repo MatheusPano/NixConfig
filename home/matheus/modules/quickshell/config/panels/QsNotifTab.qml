@@ -181,10 +181,7 @@ ColumnLayout {
                     implicitHeight: cardContent.implicitHeight + 18
 
                     Behavior on implicitHeight {
-                        NumberAnimation {
-                            duration: 160
-                            easing.type: Easing.OutCubic
-                        }
+                        Anim { curve: "fast" }
                     }
 
                     MouseArea {

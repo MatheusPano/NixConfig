@@ -11,6 +11,11 @@ ColumnLayout {
     // recalculada a cada abertura pra não congelar na virada do dia
     property date today: new Date()
 
+    // diâmetro da bolinha do dia. O popup do relógio tem largura de sobra e
+    // fica no padrão; o dashboard passa um valor menor.
+    property int cellSize: 28
+    property int dayFontSize: 12
+
     readonly property var grid: {
         const base = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
         const year = base.getFullYear();
@@ -76,20 +81,20 @@ ColumnLayout {
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.minimumHeight: 28
+                Layout.minimumHeight: root.cellSize
 
                 Rectangle {
                     anchors.centerIn: parent
-                    width: 28
-                    height: 28
-                    radius: 14
+                    width: root.cellSize
+                    height: root.cellSize
+                    radius: width / 2
                     color: cell.isToday ? Theme.primary : "transparent"
                     visible: cell.modelData > 0
 
                     UiText {
                         anchors.centerIn: parent
                         text: cell.modelData > 0 ? String(cell.modelData) : ""
-                        font.pixelSize: 12
+                        font.pixelSize: root.dayFontSize
                         color: cell.isToday ? "#ffffff" : Theme.fgMid
                     }
                 }

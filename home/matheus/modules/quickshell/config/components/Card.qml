@@ -1,8 +1,8 @@
 import QtQuick
 import "../services"
 
-// Cartão iOS: fundo sutil, cantos 14. Conteúdo entra como filho.
+// Cartão M3: fundo sutil por cima do vidro, canto lg da escala.
 Rectangle {
     color: Theme.card
-    radius: 14
+    radius: Theme.radius.lg
 }

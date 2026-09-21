@@ -30,6 +30,64 @@ Singleton {
     readonly property bool shadowsOn: adapter.shadows
     readonly property bool animationsOn: adapter.animations
 
+    // ── movimento (Material 3 Expressive) ────────────────────
+    // Curvas espaciais têm overshoot de mola (pontos de controle > 1):
+    // o elemento passa do alvo e volta assentando. "effects" não tem —
+    // opacidade acima de 1.0 só clampa e pisca. "exit" acelera pra fora
+    // (fechamentos). Consumidas por components/Anim e CAnim; modo jogo
+    // (animationsOn=false) zera a duração lá.
+    readonly property var animCurves: ({
+        fast:    { pts: [0.42, 1.67, 0.21, 0.90, 1, 1], ms: 350 },
+        spatial: { pts: [0.38, 1.21, 0.22, 1.00, 1, 1], ms: 500 },
+        slow:    { pts: [0.39, 1.29, 0.35, 0.98, 1, 1], ms: 650 },
+        effects: { pts: [0.34, 0.80, 0.34, 1.00, 1, 1], ms: 200 },
+        exit:    { pts: [0.30, 0.00, 0.80, 0.15, 1, 1], ms: 240 },
+        decel:   { pts: [0.05, 0.70, 0.10, 1.00, 1, 1], ms: 400 },
+    })
+
+    // ── modo jogo ────────────────────────────────────────────
+    // Persistido de propósito: se a shell reiniciar no meio de uma partida,
+    // ela volta com blur/sombra/animação desligados E sabendo como desfazer.
+    readonly property bool gameMode: adapter.game
+
+    readonly property var gameSavedData: {
+        try {
+            return JSON.parse(adapter.gameSaved || "{}");
+        } catch (e) {
+            return {};
+        }
+    }
+
+    // extra: quem chama guarda o que mais quiser desfazer (perfil de energia)
+    function enterGame(extra) {
+        if (adapter.game)
+            return;
+        adapter.gameSaved = JSON.stringify(Object.assign({
+            blur: adapter.blur,
+            shadows: adapter.shadows,
+            animations: adapter.animations,
+        }, extra || {}));
+        adapter.blur = "off";
+        adapter.shadows = false;
+        adapter.animations = false;
+        adapter.game = true;
+        stateFile.writeAdapter();
+        applyWindowLook();
+    }
+
+    function exitGame() {
+        if (!adapter.game)
+            return;
+        const saved = gameSavedData;
+        adapter.blur = saved.blur ?? "full";
+        adapter.shadows = saved.shadows ?? true;
+        adapter.animations = saved.animations ?? true;
+        adapter.game = false;
+        adapter.gameSaved = "";
+        stateFile.writeAdapter();
+        applyWindowLook();
+    }
+
     function set(key, value) {
         adapter[key] = value;
         stateFile.writeAdapter();
@@ -52,6 +110,8 @@ Singleton {
             property string blur: "full"
             property bool shadows: true
             property bool animations: true
+            property bool game: false
+            property string gameSaved: ""
         }
     }
 
@@ -60,7 +120,17 @@ Singleton {
 
     function toggleZen() {
         zen = !zen;
-        Quickshell.execDetached(["hyprctl", "keyword", "general:gaps_out", gapsOutFor(zen)]);
+        hypr(`keyword general:gaps_out ${gapsOutFor(zen)}`);
+    }
+
+    // Todo hyprctl do tema passa por aqui. O comentário lá em cima já dizia
+    // que instância de teste não podia mexer na sessão real, mas só os binds
+    // eram protegidos — rodar `qs -p .` pra testar mudava blur, sombra e
+    // animação da sessão de verdade, e não voltava.
+    function hypr(batch) {
+        if (!managed)
+            return;
+        Quickshell.execDetached(["hyprctl", "--batch", batch]);
     }
 
     // ── paleta de acentos (Tokyo Night, igual ao resto do sistema) ──
@@ -93,26 +163,106 @@ Singleton {
         return defaultAccent;
     }
 
-    readonly property color primary: resolveMode(primaryMode)
-    readonly property color secondary: resolveMode(secondaryMode)
+    // ── Material 3 dinâmico (matugen, desenho do caelestia) ──
+    // matugen gera scheme.json (50 papéis M3, dark+light juntos) a partir
+    // do wallpaper — ou de uma cor fixa quando o accent escolhido não é
+    // "wallpaper", então os swatches continuam mandando (viram seed).
+    // FileView com watch: o arquivo muda, a shell inteira recolore sem
+    // reiniciar. Sem matugen instalado nada quebra: vale o fallback
+    // estático (a paleta antiga).
+    property var schemeColors: ({})
+
+    FileView {
+        id: schemeFile
+        path: root.stateDir + "/scheme.json"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                root.schemeColors = JSON.parse(text()).colors ?? {};
+            } catch (e) {
+                root.schemeColors = {};
+            }
+        }
+    }
+
+    function m3(role, fallback) {
+        const entry = schemeColors[role];
+        const m = entry ? entry[cream ? "light" : "dark"] : null;
+        return (m && m.color) ? m.color : fallback;
+    }
+
+    function regenScheme() {
+        // managed: instância de teste não disputa a escrita do scheme
+        if (!managed)
+            return;
+        if (primaryMode === "wallpaper" && !Wallpapers.current)
+            return;
+        schemeProc.running = true;
+    }
+
+    Process {
+        id: schemeProc
+
+        // atômico via tmp+mv; sem matugen no PATH o && corta antes do mv
+        command: ["bash", "-c",
+            (root.primaryMode === "wallpaper"
+                ? `matugen image "${Wallpapers.current}"`
+                : `matugen color hex "${root.resolveMode(root.primaryMode)}"`)
+            + ` --source-color-index 0 --dry-run --json hex`
+            + ` > "${root.stateDir}/scheme.json.tmp"`
+            + ` && mv "${root.stateDir}/scheme.json.tmp" "${root.stateDir}/scheme.json"`]
+    }
+
+    onPrimaryModeChanged: regenScheme()
+
+    Connections {
+        target: Wallpapers
+
+        function onCurrentChanged() {
+            if (root.primaryMode === "wallpaper")
+                root.regenScheme();
+        }
+    }
+
+    // o accent escolhido vira SEED do scheme; a cor de verdade sai do M3
+    readonly property color primary: m3("primary", resolveMode(primaryMode))
+    readonly property color secondary: m3("secondary", resolveMode(secondaryMode))
 
     // ── tokens semânticos (dark ↔ cream) ─────────────────────
     readonly property bool cream: main === "cream"
 
-    // superfícies sólidas: pills da barra, moldura, painéis
-    readonly property color surface: cream ? "#f3ede2" : "#000000"
+    // superfícies sólidas: barra, moldura, painéis. m3surface é o "quase
+    // preto tingido pelo wallpaper" da identidade M3 (não mais #000 puro).
+    readonly property color surface: m3("surface", cream ? "#f3ede2" : "#000000")
     readonly property color ink: "#453527"
-    readonly property color fg: cream ? ink : "#c0caf5"
-    readonly property color fgMid: cream ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.72) : Qt.rgba(192 / 255, 202 / 255, 245 / 255, 0.75)
-    readonly property color fgDim: cream ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.48) : Qt.rgba(192 / 255, 202 / 255, 245 / 255, 0.4)
-    readonly property color fgFaint: cream ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.3) : Qt.rgba(192 / 255, 202 / 255, 245 / 255, 0.25)
-    readonly property color card: cream ? Qt.rgba(90 / 255, 66 / 255, 48 / 255, 0.07) : Qt.rgba(1, 1, 1, 0.05)
-    readonly property color cardHover: cream ? Qt.rgba(90 / 255, 66 / 255, 48 / 255, 0.13) : Qt.rgba(1, 1, 1, 0.09)
-    readonly property color cardActive: cream ? Qt.rgba(90 / 255, 66 / 255, 48 / 255, 0.14) : Qt.rgba(1, 1, 1, 0.14)
-    readonly property color separator: cream ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.1) : Qt.rgba(1, 1, 1, 0.06)
-    readonly property color entryBg: cream ? Qt.rgba(90 / 255, 66 / 255, 48 / 255, 0.1) : Qt.rgba(1, 1, 1, 0.08)
+    readonly property color fg: m3("on_surface", cream ? ink : "#c0caf5")
+    readonly property color fgMid: m3("on_surface_variant", cream ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.72) : Qt.rgba(192 / 255, 202 / 255, 245 / 255, 0.75))
+    readonly property color fgDim: Qt.alpha(fg, cream ? 0.48 : 0.4)
+    readonly property color fgFaint: Qt.alpha(fg, cream ? 0.3 : 0.25)
 
-    readonly property color red: cream ? "#b03a2e" : "#f7768e"
+    // camadas translúcidas por cima do vidro dos painéis: derivadas do fg
+    // (que agora é tingido), então seguem o scheme sem matar o blur
+    readonly property color card: Qt.alpha(fg, cream ? 0.07 : 0.05)
+    readonly property color cardHover: Qt.alpha(fg, cream ? 0.13 : 0.09)
+    readonly property color cardActive: Qt.alpha(fg, 0.14)
+    readonly property color separator: Qt.alpha(fg, cream ? 0.1 : 0.06)
+    readonly property color entryBg: Qt.alpha(fg, cream ? 0.1 : 0.08)
+
+    // camadas sólidas M3, pra quem é opaco (barra, botões, toggles, pills)
+    readonly property color surfaceContainerLow: m3("surface_container_low", cream ? "#ede7da" : "#101014")
+    readonly property color surfaceContainer: m3("surface_container", cream ? "#eae3d6" : "#16161e")
+    readonly property color surfaceContainerHigh: m3("surface_container_high", cream ? "#e4ddd0" : "#1d1d28")
+    readonly property color surfaceContainerHighest: m3("surface_container_highest", cream ? "#ded7ca" : "#24242f")
+    readonly property color onPrimary: m3("on_primary", cream ? "#ffffff" : "#15161e")
+    readonly property color primaryContainer: m3("primary_container", Qt.alpha(primary, 0.25))
+    readonly property color onPrimaryContainer: m3("on_primary_container", fg)
+    readonly property color secondaryContainer: m3("secondary_container", Qt.alpha(secondary, 0.25))
+    readonly property color onSecondaryContainer: m3("on_secondary_container", fg)
+    readonly property color outline: m3("outline", fgDim)
+    readonly property color outlineVariant: m3("outline_variant", fgFaint)
+
+    readonly property color red: m3("error", cream ? "#b03a2e" : "#f7768e")
     readonly property color green: cream ? "#557d2f" : "#9ece6a"
     readonly property color yellow: cream ? "#a3742c" : "#e0af68"
     readonly property color cyanish: cream ? "#22809c" : "#7dcfff"
@@ -125,10 +275,29 @@ Singleton {
         : Qt.alpha(secondary, 0.7)
     readonly property color wsEmpty: cream ? Qt.rgba(69 / 255, 53 / 255, 39 / 255, 0.25) : Qt.rgba(192 / 255, 202 / 255, 245 / 255, 0.2)
 
+    // Espessura da moldura da tela. Mora aqui porque a matemática do
+    // encaixe precisa dela: um painel que sobe até o topo encosta na
+    // moldura, e a concha nasce nessa profundidade, não no topo do card.
+    readonly property int frameWidth: 8
+
+    // Raio da concha côncava onde um painel encaixa na barra/moldura.
+    // Separado do fillet de 16 que liga a barra à moldura de propósito: ali
+    // é um detalhe de acabamento, aqui é o gesto que faz painel e barra
+    // lerem como uma peça só, e 16 sumia contra um painel de 980px.
+    readonly property int dockFillet: 40
+
+    // ── escalas M3 (tokens do caelestia) ─────────────────────
+    readonly property var radius: ({ xs: 4, sm: 8, md: 12, lg: 16, lgi: 20, xl: 28, xli: 32, xxl: 48, full: 999 })
+    readonly property var space: ({ xs: 4, sm: 8, md: 12, lg: 16, lgi: 20, xl: 28, xli: 32, xxl: 48 })
+    readonly property var fontPx: ({ sm: 11, smr: 12, md: 13, lgr: 15, lg: 18, xl: 28 })
+
     // ── fontes ───────────────────────────────────────────────
+    // Roboto Flex = tipografia M3 (a GoogleSansFlex do caelestia não é
+    // livre); sem ela instalada o fontconfig cai na Inter e nada quebra.
     readonly property string fontMono: "JetBrainsMono Nerd Font"
-    readonly property string fontUi: "Inter Variable"
+    readonly property string fontUi: "Roboto Flex"
     readonly property string fontIcon: "Symbols Nerd Font"
+    readonly property string fontMaterial: "Material Symbols Rounded"
 
     function alpha(c, a) {
         return Qt.alpha(c, a);
@@ -170,7 +339,7 @@ Singleton {
             `keyword decoration:shadow:range ${shadowsOn ? 24 : 0}`,
             `keyword animations:enabled ${animationsOn ? 1 : 0}`,
         ].join(" ; ");
-        Quickshell.execDetached(["hyprctl", "--batch", batch]);
+        hypr(batch);
     }
 
     // borda da janela ativa acompanha a cor primária do tema
@@ -182,7 +351,7 @@ Singleton {
             `keyword general:col.active_border rgba(${active}ee)`,
             `keyword general:col.inactive_border ${inactive}`,
         ].join(" ; ");
-        Quickshell.execDetached(["hyprctl", "--batch", batch]);
+        hypr(batch);
     }
 
     onPrimaryChanged: applyBorders()
@@ -202,7 +371,8 @@ Singleton {
         onTriggered: {
             root.applyBorders();
             if (root.roundness !== "soft" || root.density !== "normal"
-                || root.blurMode !== "full" || !root.shadowsOn || !root.animationsOn)
+                || root.blurMode !== "full" || !root.shadowsOn || !root.animationsOn
+                || root.gameMode)
                 root.applyWindowLook();
         }
     }

@@ -160,8 +160,10 @@ Singleton {
             isDay: isDay,
         };
 
-        // próximos blocos de 3h: os de hoje que ainda não passaram,
-        // completados com os de amanhã até fechar 5
+        // Próximos blocos de 3h: os de hoje que ainda não passaram,
+        // completados com os de amanhã. São 8 = 24h à frente; o wttr entrega
+        // de 3 em 3 horas (00,03,…,21), não existe granularidade de 1h nessa
+        // API — 8 é tudo que dá pra mostrar sem repetir o dia seguinte.
         const slots = [];
         const weather = data.weather ?? [];
         for (const day of weather.slice(0, 2)) {
@@ -176,10 +178,10 @@ Singleton {
                     code: Number(h.weatherCode),
                     rain: Number(h.chanceofrain ?? 0),
                 });
-                if (slots.length >= 5)
+                if (slots.length >= 8)
                     break;
             }
-            if (slots.length >= 5)
+            if (slots.length >= 8)
                 break;
         }
 

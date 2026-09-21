@@ -5,6 +5,7 @@ import Quickshell.Hyprland
 import "services"
 import "bar"
 import "panels"
+import "components"
 
 ShellRoot {
     id: root
@@ -28,6 +29,16 @@ ShellRoot {
     ClipboardPopup {}
 
     WallpaperPicker {}
+
+    SessionMenu {}
+
+    WindowSwitcher {}
+
+    // agente polkit: dorme registrado até alguém pedir autorização
+    PolkitDialog {}
+
+    // segura a tela acesa no café / modo jogo
+    IdleGuard {}
 
     Component.onCompleted: {
         Quickshell.execDetached(["mkdir", "-p",
@@ -67,6 +78,32 @@ ShellRoot {
         onPressed: Panels.clipOpen = !Panels.clipOpen
     }
 
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "session"
+        onPressed: Panels.sessionOpen = !Panels.sessionOpen
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "game"
+        onPressed: Toggles.toggleGameMode()
+    }
+
+    // Alt+Tab: repetir o atalho anda na lista em vez de reabrir — o
+    // Hyprland consome a tecla no bind e ela nunca chega no painel
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "switcher"
+        onPressed: Panels.switcherAdvance(1)
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "switcherPrev"
+        onPressed: Panels.switcherAdvance(-1)
+    }
+
     // ── IPC: qs ipc call panel <fn> (uso manual / scripts) ──
     IpcHandler {
         target: "panel"
@@ -86,6 +123,12 @@ ShellRoot {
         function clipboard(): void {
             Panels.clipOpen = !Panels.clipOpen;
         }
+        function calendar(): void {
+            Panels.calendarOpen = !Panels.calendarOpen;
+        }
+        function media(): void {
+            Panels.mediaOpen = !Panels.mediaOpen;
+        }
         function tray(): void {
             Panels.trayRevealed = !Panels.trayRevealed;
         }
@@ -93,37 +136,34 @@ ShellRoot {
             if (["home", "sistema", "media", "wallpaper"].includes(name))
                 Panels.openCenterTab(name);
         }
+        function session(): void {
+            Panels.sessionOpen = !Panels.sessionOpen;
+        }
+        function switcher(): void {
+            Panels.switcherAdvance(1);
+        }
+        function game(): void {
+            Toggles.toggleGameMode();
+        }
     }
 
-    // O hyprland.conf ativo vem da nix store e ainda aponta pro `ags request`.
-    // Rebind em runtime (mesmo padrão do initZen/initClipboard do AGS):
-    // voltar pro AGS = trocar o desktop.bar, o serviço dele refaz os binds.
-    // Gated pelo Theme.managed: instância de teste não rouba os binds.
+    // Os binds das teclas moram no hyprland.conf (bind = ..., global,
+    // quickshell:*) e apontam direto pros GlobalShortcut acima — não há mais
+    // rebind em runtime. O que sobrou aqui é estado global do Hyprland que
+    // depende do tema, então só pode ser aplicado depois da shell subir.
+    // Gated pelo Theme.managed: instância de teste não mexe na sessão real.
     Timer {
         running: Theme.managed
         interval: 3000
         onTriggered: {
-            // dispatcher `global`: aciona os GlobalShortcut declarados acima.
-            // Sem aspas nos binds: o execDetached não passa por shell, então
-            // aspas iriam literais pro hyprctl (bind morto).
-            const binds = [
-                "keyword unbind SUPER,B",
-                "keyword unbind SUPER,N",
-                "keyword unbind SUPER,A",
-                "keyword unbind SUPER SHIFT,W",
-                "keyword unbind SUPER,V",
-                "keyword bind SUPER,B,global,quickshell:zen",
-                "keyword bind SUPER,N,global,quickshell:sidebar",
-                "keyword bind SUPER,A,global,quickshell:center",
-                "keyword bind SUPER SHIFT,W,global,quickshell:wallpaper",
-                "keyword bind SUPER,V,global,quickshell:clipboard",
+            const rules = [
                 // a shell anima os próprios painéis; a animação de layers do
                 // Hyprland por cima só deixava o início do slide mole
                 // (sintaxe de rules do Hyprland 0.56+: campo + match:)
                 "keyword layerrule animation none, match:namespace quickshell.*",
                 `keyword general:gaps_out ${Theme.gapsOutFor(Theme.zen)}`,
             ].join(" ; ");
-            Quickshell.execDetached(["hyprctl", "--batch", binds]);
+            Quickshell.execDetached(["hyprctl", "--batch", rules]);
         }
     }
 }

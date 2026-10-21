@@ -19,7 +19,7 @@
   services.thermald.enable = true;
   services.power-profiles-daemon.enable = true;
 
-  # Info de bateria via D-Bus (AstalBattery/AGS usa pra ser reativo).
+  # Info de bateria via D-Bus (a shell usa pra ser reativa).
   services.upower.enable = true;
 
   # 15GB de RAM, zram e sem swap em disco: quando um build do Gradle/Android

@@ -31,25 +31,11 @@ in
     slurp
     satty
     wl-clipboard
-    cliphist # histórico de clipboard (aba Clip da sidebar AGS)
+    cliphist # histórico de clipboard (aba Clip da sidebar)
     playerctl # teclas de mídia do notebook (os bindl do hyprland.conf chamam
     # `playerctl next/play-pause/previous`; sem o pacote elas não faziam nada)
-    hyprsunset # luz noturna (toggle na sidebar AGS)
-    wf-recorder # gravação de tela (botão na sidebar AGS)
-
-    # AGS + bibliotecas Astal
-    ags
-    astal.io
-    astal.astal3
-    astal.gjs
-    astal.hyprland
-    astal.wireplumber
-    astal.network
-    astal.bluetooth
-    astal.battery
-    astal.mpris
-    astal.notifd
-    astal.tray
+    hyprsunset # luz noturna (toggle na sidebar)
+    wf-recorder # gravação de tela (botão na sidebar)
 
     # Visualizadores: nao havia NENHUM instalado, entao abrir um png/mp4 pelo
     # Thunar nao fazia nada. Ambos estao mapeados em modules/xdg/default.nix.

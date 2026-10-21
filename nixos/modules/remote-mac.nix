@@ -6,6 +6,10 @@ let
   # IP correspondente: 100.83.136.73
   macHost = "mac-mini-de-matheus.tailea6a31.ts.net";
 
+  # Porta do servico HTTP do Sunshine, usada so pra sondar se o Mac responde
+  # num IP de LAN antes de preferir aquele caminho.
+  sunshinePort = 47989;
+
   # Bitrate/fps/resolucao ajustaveis por env, sem rebuild: o link muda conforme
   # onde voce esta (LAN de casa ~6ms vs hotspot ~46ms com jitter). O Moonlight
   # nao reduz bitrate sozinho — ele insiste e descarta frames, o que aparece
@@ -33,10 +37,55 @@ let
       *)        MOUSE="--absolute-mouse" ;;
     esac
 
+    # Quando os dois estao no mesmo segmento, passar pelo Tailscale so custa:
+    # tailscale0 tem MTU 1280 contra os 1500 do wlan, entao o pacote de video
+    # de 1392 do Moonlight nao cabe inteiro, e ainda por cima cada pacote leva
+    # encapsulamento WireGuard em userspace. O proprio `tailscale ping` entrega
+    # a rota que ele escolheu: direto sai como "via 192.168.42.82:41641", relay
+    # sai como "via DERP(xxx)" — so o primeiro caso vira IP aqui.
+    # MAC_HOST=<ip|host> forca um destino e pula a deteccao.
+    pick_host() {
+      if [ -n "''${MAC_HOST:-}" ]; then
+        printf '%s' "$MAC_HOST"
+        return
+      fi
+
+      ep=$(${pkgs.tailscale}/bin/tailscale ping --c 1 --timeout 2s "${macHost}" 2>/dev/null \
+           | ${pkgs.gnused}/bin/sed -nE 's#.* via ([0-9.]+):[0-9]+ .*#\1#p' \
+           | head -1)
+
+      # So aceita RFC1918: um endpoint publico significa que o Mac esta longe e
+      # o tunel e' o caminho certo mesmo.
+      case "$ep" in
+        10.*|192.168.*|172.1[6-9].*|172.2[0-9].*|172.3[01].*) ;;
+        *) ep="" ;;
+      esac
+
+      # Confirma que o Sunshine atende naquele IP antes de comprometer a sessao.
+      if [ -n "$ep" ] && ${pkgs.coreutils}/bin/timeout 1 \
+           ${pkgs.runtimeShell} -c "exec 3<>/dev/tcp/$ep/${toString sunshinePort}" 2>/dev/null; then
+        printf '%s' "$ep"
+      else
+        printf '%s' "${macHost}"
+      fi
+    }
+
+    HOST=$(pick_host)
+
+    # 1392 e' o default de LAN do Moonlight e estoura o MTU 1280 do tailscale0;
+    # 1024 cabe com folga depois do overhead do WireGuard.
+    case "$HOST" in
+      100.*|*.ts.net) PACKET="''${MAC_PACKET:-1024}" ;;
+      *)              PACKET="''${MAC_PACKET:-1392}" ;;
+    esac
+
+    echo "mac-remote: host=$HOST packet-size=$PACKET bitrate=$BITRATE fps=$FPS" >&2
+
     exec ${pkgs.moonlight-qt}/bin/moonlight stream \
       "''${RES_ARGS[@]}" \
       --fps "$FPS" \
       --bitrate "$BITRATE" \
+      --packet-size "$PACKET" \
       --video-codec HEVC \
       --display-mode fullscreen \
       "$MOUSE" \
@@ -44,7 +93,7 @@ let
       --frame-pacing \
       --no-vsync \
       --quit-after \
-      "${macHost}" "Desktop"
+      "$HOST" "Desktop"
   '';
 in
 {

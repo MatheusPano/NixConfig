@@ -32,17 +32,18 @@
         "quickshell": "quickshell"
       },
       "locked": {
-        "lastModified": 1788978219,
-        "narHash": "sha256-RhtGBgUwIeyxEdg6HnsVmitYUseVgbor3b0lcMglY8Y=",
-        "owner": "caelestia-dots",
-        "repo": "shell",
-        "rev": "7f39105ee454dd40715c3786783af5604f43ee01",
-        "type": "github"
+        "lastModified": 1792547280,
+        "narHash": "sha256-R2RFK+zmJwFeyvxsLMZynfBqUA8ANl3wO2l/2CRzE3Q=",
+        "ref": "matheus",
+        "rev": "0feae9f3039e3b3c1b78d9738d31e93fe77f197f",
+        "revCount": 2643,
+        "type": "git",
+        "url": "file:///home/matheus/dev/caelestia-shell"
       },
       "original": {
-        "owner": "caelestia-dots",
-        "repo": "shell",
-        "type": "github"
+        "ref": "matheus",
+        "type": "git",
+        "url": "file:///home/matheus/dev/caelestia-shell"
       }
     },
     "claude-desktop": {
@@ -142,6 +143,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-claude": {
+      "locked": {
+        "lastModified": 1792502884,
+        "narHash": "sha256-IoNisKcGbUjdd45qCqywGMCYmZ5EnkxezvLII0FWwNA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "02c087f3fe673c9e317f206a627cb6b910336dbe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-lib": {
       "locked": {
         "lastModified": 1774748309,
@@ -200,6 +217,7 @@
         "claude-desktop": "claude-desktop",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs_2",
+        "nixpkgs-claude": "nixpkgs-claude",
         "spicetify-nix": "spicetify-nix",
         "zen-browser": "zen-browser"
       }

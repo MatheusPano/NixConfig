@@ -22,13 +22,16 @@
       font-size = 11;
 
       # ── Tema ──
-      # Tokyo Night: mesma paleta do AGS (#7aa2f7 etc.).
+      # Tokyo Night: mesma paleta da shell (#7aa2f7 etc.).
       # "Night" e a variante de fundo mais escuro, casa com o modo dark da barra.
       theme = "dark:TokyoNight Night,light:TokyoNight Day";
 
-      # Opaco de proposito: com transparencia o wallpaper vaza e tinge a janela
-      # (mesma decisao do hyprland.conf).
-      # background-opacity = 0.93;
+      # Vidro, no mesmo alpha do gtk3.extraCss em modules/gtk (2026-09-06).
+      # Reverte a decisao anterior de manter opaco: o Hyprland borra o
+      # wallpaper atras (blur xray) e o Ghostty mantem os glifos 100% opacos,
+      # entao o texto nao perde contraste - so o fundo cede.
+      # Depende do blur raio 18 do hyprland.conf para nao virar janela furada.
+      background-opacity = 0.62;
 
       # ── Janela ──
       window-padding-x = 12;

@@ -23,6 +23,12 @@
     "splash"
     "udev.log_level=3"
     "rd.systemd.show_status=false"
+
+    # PSR (Panel Self Refresh) do eDP desligado: cada flip da tela esperava
+    # ~11ms acordando o painel (kworker i915_flip em D-state, PSI de io a ~85%
+    # com o NVMe parado), estourando o frame de 6ms a 165Hz e causando stutter
+    # no inicio de toda animacao. Custo: um pouco de bateria com tela parada.
+    "i915.enable_psr=0"
   ];
   boot.consoleLogLevel = 0;
   boot.initrd.verbose = false;

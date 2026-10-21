@@ -28,6 +28,10 @@
 
   networking.hostName = "nixos";
 
+  networking.extraHosts = ''
+    177.74.191.206 cefis.com.br
+  '';
+
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;

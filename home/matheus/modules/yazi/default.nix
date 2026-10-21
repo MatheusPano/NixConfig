@@ -11,8 +11,9 @@ let
   };
 in
 {
-  # File manager no terminal (rapido, com preview de imagem via Kitty graphics,
-  # que o Ghostty suporta). A integracao com o zsh cria a funcao `y`: ao sair,
+  # File manager no terminal (rapido, com preview de imagem via Kitty graphics -
+  # nativo agora que o terminal e o proprio kitty). A integracao com o zsh cria
+  # a funcao `y`: ao sair,
   # o shell faz cd para o diretorio onde voce estava (use `y` em vez de `yazi`).
   programs.yazi = {
     enable = true;

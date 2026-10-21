@@ -52,6 +52,18 @@
   systemd.user.sessionVariables = {
     XCURSOR_THEME = config.home.pointerCursor.name;
     XCURSOR_SIZE = toString config.home.pointerCursor.size;
+
+    # Mesma historia, outro tema: sem isto o Qt nao le o gtk-icon-theme-name
+    # das settings do GTK e so enxerga o hicolor. Icone que depende do tema
+    # (easyeffects, blueman, firefox na bandeja e nas notificacoes) virava o
+    # quadriculado preto-e-rosa de imagem faltando - medido com
+    # Quickshell.iconPath, que voltava string vazia pra todos eles e passou a
+    # resolver com a variavel ligada.
+    #
+    # Aqui e nao no servico da shell porque vale pra sessao inteira, qualquer
+    # app Qt. Carrega o libqgtk3 (GTK3, nao GTK4 - este sim acorda a dGPU);
+    # conferido que a RTX 4050 segue em suspended/D3cold com ele ligado.
+    QT_QPA_PLATFORMTHEME = "gtk3";
   };
 
   home.sessionVariables = {

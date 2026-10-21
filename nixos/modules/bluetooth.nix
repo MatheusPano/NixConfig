@@ -1,7 +1,7 @@
 { ... }:
 
 {
-  # Sem blueman: a sidebar do AGS (astal.bluetooth) cobre o dia a dia
+  # Sem blueman: a sidebar da shell (bluetoothctl) cobre o dia a dia
   # e o overskride serve para parear dispositivos novos sob demanda.
   hardware.bluetooth = {
     enable = true;

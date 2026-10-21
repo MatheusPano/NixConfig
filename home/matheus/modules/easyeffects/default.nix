@@ -91,7 +91,7 @@ in
   };
 
   # Troca de preset automática conforme a saída ativa
-  xdg.configFile = {
+  xdg.dataFile = {
     "easyeffects/autoload/output/${speakerSink}:[Out] Speaker.json".text = builtins.toJSON {
       device = speakerSink;
       device-description = "Speaker";

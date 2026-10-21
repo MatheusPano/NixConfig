@@ -48,8 +48,10 @@
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
-    inter # fonte de UI dos paineis do AGS
+    inter # fonte de UI dos paineis da shell
     nerd-fonts.symbols-only # icones com corpo quadrado (centralizam nos circulos)
+    material-symbols # icones da barra/paineis M3 (redesign caelestia)
+    roboto-flex # tipografia M3 (a GoogleSansFlex do caelestia nao e livre)
     noto-fonts # cobertura ampla de unicode (fallback do sans/serif)
     noto-fonts-cjk-sans # japones/chines/coreano (senao vira caixinha)
     noto-fonts-color-emoji
@@ -70,7 +72,13 @@
   environment.systemPackages = with pkgs; [
     git
     brightnessctl
-    kitty # terminal de emergencia (o Hyprland busca por ele no padrao)
+    # Terminal principal desde 2026-09-11 (home/matheus/modules/kitty/ traz a
+    # config). Fica TAMBEM aqui no nivel de sistema de proposito: e o terminal
+    # de emergencia que o Hyprland procura no padrao dele, e continua existindo
+    # mesmo se uma geracao do home-manager quebrar. Nao colide com o modulo do
+    # home-manager - perfis diferentes, e com useGlobalPkgs os dois resolvem
+    # para o mesmo caminho no store.
+    kitty
     xarchiver # backend do thunar-archive-plugin (extrair/comprimir)
     ffmpegthumbnailer # miniaturas de video para o tumbler
   ];

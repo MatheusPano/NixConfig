@@ -2,6 +2,10 @@
 
 {
   services.printing.enable = true;
+  # Sem o cups-browsed: ele segurava o cups de pe o tempo todo (e ja teve CVE
+  # serio). Impressora de rede moderna (IPP Everywhere) aparece pelo avahi
+  # abaixo sem ele, e o cups volta a subir so quando usado.
+  services.printing.browsed.enable = false;
   # Descoberta de impressora/servico na rede local (mDNS). Sem o avahi o CUPS
   # so acha impressora se voce digitar o IP na mao.
   services.avahi = {

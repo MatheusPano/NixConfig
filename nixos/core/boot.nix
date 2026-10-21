@@ -18,6 +18,10 @@
   # do plymouth cobre todo o intervalo entre a BIOS e a tela de lock: nenhum
   # frame de console aparece no meio.
   boot.plymouth.enable = true;
+  # O xe (driver Intel novo) carregava sem usuario nenhum: a iGPU Raptor Lake
+  # roda no i915.
+  boot.blacklistedKernelModules = [ "xe" ];
+
   boot.kernelParams = [
     "quiet"
     "splash"
